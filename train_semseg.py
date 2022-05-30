@@ -14,7 +14,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 from dataloader import *
-from display import Visuell_PointCloud_per_batch_according_to_label
+# from display import Visuell_PointCloud_per_batch_according_to_label
 from model import *
 import numpy as np
 from torch.utils.data import DataLoader
