@@ -321,7 +321,7 @@ def test(args, io):
 
 
     criterion = cal_loss
-    NUM_CLASS=6
+    NUM_CLASS=7
 
     ####################
     # Test
@@ -403,9 +403,9 @@ if __name__ == "__main__":
     parser.add_argument('--root', type=str, default='/home/bi/study/thesis/data/test', 
                         help='file need to be tested')
     parser.add_argument('--exp', type=str, default='training_125', metavar='N',
-                        help='experiment version to record reslut')
+                        help='experiment version to record result')
     parser.add_argument('--change', type=str, default='hh', metavar='N',
-                        help='experiment version to record reslut')
+                        help='experiment version to record result')
     parser.add_argument('--finetune', type=bool, default=False, metavar='N',
                         help='if we finetune the model')
     parser.add_argument('--eval', type=bool,  default=False,
