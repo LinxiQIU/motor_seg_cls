@@ -36,7 +36,7 @@ def Get_ObjectID(x) :    #get all kinds of ObjectID from numpy file
 def densify_blots(patch_motor):
     add=[]
     for i in range(len(patch_motor)):
-        if (patch_motor[i][6]==6) or (path_motor[i][6] == 5):
+        if (patch_motor[i][6]==6) or (patch_motor[i][6] == 5):
             add.append(patch_motor[i])
     add=np.array(add)
     twonn=NearestNeighbors(n_neighbors=2,algorithm='ball_tree').fit(add[:,0:3])
