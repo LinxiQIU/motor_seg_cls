@@ -135,7 +135,7 @@ class DGCNN_semseg(nn.Module):                                                  
                                    self.bn8,    #1024
                                    nn.LeakyReLU(negative_slope=0.2))
         self.dp1 = nn.Dropout(p=args.dropout)
-        self.conv9 = nn.Conv1d(256, 6, kernel_size=1, bias=False)   #256*6=1536
+        self.conv9 = nn.Conv1d(256, 7, kernel_size=1, bias=False)   #256*7=1792
         #dgcnn_con      1244800
 
         

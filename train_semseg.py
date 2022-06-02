@@ -118,7 +118,7 @@ def train(args, io):
 
     criterion = cal_loss
     loss_cluster=nn.MSELoss()
-    NUM_CLASS=6
+    NUM_CLASS=7
     best_iou = 0
     best_bolts_iou=0
     for epoch in range(start_epoch,args.epochs):
@@ -321,7 +321,7 @@ def test(args, io):
 
 
     criterion = cal_loss
-    NUM_CLASS=6
+    NUM_CLASS=7
 
     ####################
     # Test
