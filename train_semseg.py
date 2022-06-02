@@ -20,7 +20,7 @@ import numpy as np
 from torch.utils.data import DataLoader
 from util import *
 #from display import *
-# from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 from plyfile import PlyData, PlyElement
 import time
 from tqdm import tqdm
@@ -468,14 +468,14 @@ if __name__ == "__main__":
     if not args.eval:
         if not os.path.exists(str(BASE_DIR)+"/outputs/"+args.model+'/'+args.exp+'/'+args.change+add_string+'/0'):
             os.makedirs(str(BASE_DIR)+"/outputs/"+args.model+'/'+args.exp+'/'+args.change+add_string+'/0')
-            # writer = SummaryWriter(str(BASE_DIR)+"/outputs/"+args.model+'/'+args.exp+'/'+args.change+add_string+'/0')
+            writer = SummaryWriter(str(BASE_DIR)+"/outputs/"+args.model+'/'+args.exp+'/'+args.change+add_string+'/0')
             io = PrintLog(str(BASE_DIR)+"/outputs/"+args.model+'/'+args.exp+'/'+args.change+add_string+'/0'+'/run'+add_string+'.log')
         else:
             i=1
             while(True):
                 if not os.path.exists(str(BASE_DIR)+"/outputs/"+args.model+'/'+args.exp+'/'+args.change+add_string+'/'+str(i)):
                     os.makedirs(str(BASE_DIR)+"/outputs/"+args.model+'/'+args.exp+'/'+args.change+add_string+'/'+str(i))
-                    # writer = SummaryWriter(str(BASE_DIR)+"/outputs/"+args.model+'/'+args.exp+'/'+args.change+add_string+'/'+str(i))
+                    writer = SummaryWriter(str(BASE_DIR)+"/outputs/"+args.model+'/'+args.exp+'/'+args.change+add_string+'/'+str(i))
                     io = PrintLog(str(BASE_DIR)+"/outputs/"+args.model+'/'+args.exp+'/'+args.change+add_string+'/'+str(i)+'/run'+add_string+'.log')
                     break
                 else:

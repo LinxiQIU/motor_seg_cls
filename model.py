@@ -648,7 +648,7 @@ class PCT_semseg(nn.Module):                                                  # 
         self.conv5 = nn.Conv1d(1024 * 3, 512, 1)
         self.dp5 = nn.Dropout(0.5)
         self.conv6 = nn.Conv1d(512, 256, 1)
-        self.conv7 = nn.Conv1d(256, 6, 1)
+        self.conv7 = nn.Conv1d(256, 7, 1)
         self.bn5 = nn.BatchNorm1d(512)
         self.bn6 = nn.BatchNorm1d(256)
         self.relu = nn.ReLU()
