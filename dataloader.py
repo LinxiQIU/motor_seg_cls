@@ -83,7 +83,7 @@ class MotorDataset(Dataset):
             # motor_data=densify_blots(motor_data)
             motor_points=motor_data[:,0:6]
             motor_labels=motor_data[:,6]            #result is a np array           
-            num_eachtype_in_one_motor,_=np.histogram(motor_labels,bins=6,range(8))       #count how much points is there for each type(usage of np.histotram)
+            num_eachtype_in_one_motor,_=np.histogram(motor_labels, range(8))       #count how much points is there for each type(usage of np.histotram)
             label_num_eachtype+=num_eachtype_in_one_motor
             self.motors_points.append(motor_points)
             self.motors_labels.append(motor_labels)
@@ -154,7 +154,7 @@ class MotorDataset_validation(Dataset):
             motor_data=np.load(motor_directory)
             motor_points=motor_data[:,0:6]
             motor_labels=motor_data[:,6]            #result is a np array           
-            num_eachtype_in_one_motor,_=np.histogram(motor_labels,bins=6,range(8))       #count how much points is there for each type(usage of np.histotram)
+            num_eachtype_in_one_motor,_=np.histogram(motor_labels, range(8))       #count how much points is there for each type(usage of np.histotram)
             label_num_eachtype+=num_eachtype_in_one_motor
             self.motors_points.append(motor_points)
             self.motors_labels.append(motor_labels)
@@ -248,7 +248,7 @@ class MotorDataset_patch(Dataset):
             motor_points=motor_points_labels[:,0:3]     #get the schuffled points and lables
             motor_labels=motor_points_labels[:,3]
             self.interation_times_eachmotor.append(motor_labels.size/self.num_points)       #record how money 4096 points could be taken out for one motor points cloud after patch
-            num_eachtype_in_one_motor,_=np.histogram(motor_labels,bins=6,range(7))       #count how much points is there for each type(usage of np.histotram)
+            num_eachtype_in_one_motor,_=np.histogram(motor_labels, range(8))       #count how much points is there for each type(usage of np.histotram)
             label_num_eachtype+=num_eachtype_in_one_motor
             self.motors_points.append(motor_points)
             self.motors_labels.append(motor_labels)
