@@ -89,7 +89,7 @@ def train(args, io):
             count += batch_size
             train_loss += loss.item() * batch_size
             train_true.append(label.cpu().numpy())
-            train_true.append(preds.detach().cpu().numpy())
+            train_pred.append(preds.detach().cpu().numpy())
         if args.scheduler == 'cos':
             scheduler.step()
         elif args.scheduler == 'step':
