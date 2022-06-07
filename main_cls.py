@@ -121,7 +121,7 @@ def train(args, io):
             data, label = data.to(device), label.to(device).squeeze()
             data = data.permute(0, 2, 1)
             batch_size = data.size()[0]
-            logits = model(data)
+            logits = model(data.float())
             loss = criterion(logits, label)
             preds = logits.max(dim=1)[1]
             count += batch_size
