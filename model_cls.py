@@ -45,20 +45,61 @@ def get_graph_feature(x, k=20, idx=None):
     feature = torch.cat((feature-x, x), dim=3).permute(0, 3, 1, 2).contiguous()
     return feature
     
-    
+
+def index_points_neighbors(x, idx):
+    """
+    Input:
+        points: input points data, [B, N, C]
+        idx: sample index data, [B, N, K]
+    Return:
+        new_points:, indexed points data, [B, N, K, C]
+    """
+    batch_size = x.size(0)
+    num_points = x.size(1)
+    num_dims= x.size(2)
+
+    device=idx.device
+    idx_base = torch.arange(0, batch_size, device=device).view(-1, 1, 1)*num_points
+    idx=idx+idx_base
+    neighbors = x.view(batch_size*num_points, -1)[idx, :]
+    neighbors = neighbors.view(batch_size, num_points, -1, num_dims)
+
+    return neighbors
+
+
+
+def get_neighbors(x, k=20):
+    """
+    Input:
+        points: input points data, [B, C, N]
+    Return:
+        feature_points:, indexed points data, [B, 2*C, N, K]
+    """
+    batch_size = x.size(0)
+    num_dims= x.size(1)
+    num_points = x.size(2)
+    idx = knn(x, k)                                         # batch_size x num_points x 20
+    x = x.transpose(2, 1).contiguous()
+    neighbors = index_points_neighbors(x, idx)  
+    x = x.view(batch_size, num_points, 1, num_dims).repeat(1, 1, k, 1) 
+    feature = torch.cat((neighbors-x, x), dim=3).permute(0, 3, 1, 2).contiguous()
+
+    return feature
+
     
 class DGCNN_cls(nn.Module):
     def __init__(self, args, output_channels=5):
         super(DGCNN_cls, self).__init__()
         self.args = args
         self.k = args.k
+
         self.bn1 = nn.BatchNorm2d(64)
         self.bn2 = nn.BatchNorm2d(64)
         self.bn3 = nn.BatchNorm2d(128)
         self.bn4 = nn.BatchNorm2d(256)
         self.bn5 = nn.BatchNorm2d(args.emb_dims)
         
-        self.conv1 = nn.Sequential(nn.Conv2d(3, 64, kernel_size=1, bias=False),
+        self.conv1 = nn.Sequential(nn.Conv2d(6, 64, kernel_size=1, bias=False),
                                    self.bn1, nn.LeakyReLU(negative_slope=0.2))
         self.conv2 = nn.Sequential(nn.Conv2d(64*2, 64, kernel_size=1, bias=False),
                                    self.bn2, nn.LeakyReLU(negative_slope=0.2))
@@ -75,22 +116,23 @@ class DGCNN_cls(nn.Module):
         self.bn7 = nn.BatchNorm1d(256)
         self.dp2 = nn.Dropout(p=args.dropout)
         self.linear3 = nn.Linear(256, output_channels)
-        
+
+       
     def forward(self, x):
         batch_size = x.size(0)
-        x = get_graph_feature(x, k=self.k)      # (batch_size, 3, num_points) -> (batch_size, 3*2, num_points, k)
-        x = self.conv1(x)                       # (batch_size, 3*2, num_points, k) -> (batch_size, 64, num_points, k)
+        x = get_neighbors(x, k=self.k)      # (batch_size, 6, num_points) -> (batch_size, 6*2, num_points, k)
+        x = self.conv1(x)                       # (batch_size, 6*2, num_points, k) -> (batch_size, 64, num_points, k)
         x1 = x.max(dim=-1, keepdim=False)[0]    # (batch_size, 64, num_points, k) -> (batch_size, 64, num_points)
 
-        x = get_graph_feature(x1, k=self.k)     # (batch_size, 64, num_points) -> (batch_size, 64*2, num_points, k)
+        x = get_neighbors(x1, k=self.k)     # (batch_size, 64, num_points) -> (batch_size, 64*2, num_points, k)
         x = self.conv2(x)                       # (batch_size, 64*2, num_points, k) -> (batch_size, 64, num_points, k)
         x2 = x.max(dim=-1, keepdim=False)[0]    # (batch_size, 64, num_points, k) -> (batch_size, 64, num_points)
 
-        x = get_graph_feature(x2, k=self.k)     # (batch_size, 64, num_points) -> (batch_size, 64*2, num_points, k)
+        x = get_neighbors(x2, k=self.k)     # (batch_size, 64, num_points) -> (batch_size, 64*2, num_points, k)
         x = self.conv3(x)                       # (batch_size, 64*2, num_points, k) -> (batch_size, 128, num_points, k)
         x3 = x.max(dim=-1, keepdim=False)[0]    # (batch_size, 128, num_points, k) -> (batch_size, 128, num_points)
 
-        x = get_graph_feature(x3, k=self.k)     # (batch_size, 128, num_points) -> (batch_size, 128*2, num_points, k)
+        x = get_neighbors(x3, k=self.k)     # (batch_size, 128, num_points) -> (batch_size, 128*2, num_points, k)
         x = self.conv4(x)                       # (batch_size, 128*2, num_points, k) -> (batch_size, 256, num_points, k)
         x4 = x.max(dim=-1, keepdim=False)[0]    # (batch_size, 256, num_points, k) -> (batch_size, 256, num_points)
 
