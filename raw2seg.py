@@ -27,8 +27,8 @@ def random_ls(num_motors):
             
     
 
-base_dir = 'E:\\test'
-dst_dir = 'E:\\dataset'
+base_dir = 'E:\\test'  # dir of the raw data
+dst_dir = 'E:\\dataset'    # dir of the training data
 ls_type = os.listdir(base_dir)
 if 'motor_parameter.csv' in ls_type:
     ls_type.remove('motor_parameter.csv')

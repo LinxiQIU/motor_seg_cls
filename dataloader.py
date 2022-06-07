@@ -79,7 +79,7 @@ class MotorDataset(Dataset):
         for motor_position in tqdm(motor_positions,total=len(motor_positions)):
             motor_directory=os.path.join(data_root,motor_position)
             motor_data=np.load(motor_directory)
-            motor_data=densify_blots(motor_data)
+            # motor_data=densify_blots(motor_data)
             # motor_data=densify_blots(motor_data)
             motor_points=motor_data[:,0:6]
             motor_labels=motor_data[:,6]            #result is a np array           
@@ -94,9 +94,10 @@ class MotorDataset(Dataset):
 
 
         ###########according to lable_num_eachmotor and bolt_weight, caculate the labelweights######
-        label_num_eachtype[-1]/=bolt_weight
+        # label_num_eachtype[-1]*=bolt_weight
+        # label_num_eachtype[-2]*=bolt_weight
         labelweights=label_num_eachtype/np.sum(label_num_eachtype)
-        labelweights=np.power(np.max(labelweights)/labelweights,1/3)
+        labelweights=np.power(labelweights/np.max(labelweights),1/3)
         self.labelweight=labelweights/np.sum(labelweights)
         ############################################################################################
 
@@ -163,9 +164,9 @@ class MotorDataset_validation(Dataset):
 
 
         ###########according to lable_num_eachmotor and bolt_weight, caculate the labelweights######
-        label_num_eachtype[-1]/=bolt_weight
+        # label_num_eachtype[-1]/=bolt_weight
         labelweights=label_num_eachtype/np.sum(label_num_eachtype)
-        labelweights=np.power(np.max(labelweights)/labelweights,1/3)
+        labelweights=np.power(labelweights/np.max(labelweights),1/3)
         self.labelweight=labelweights/np.sum(labelweights)
         ############################################################################################
 
