@@ -149,13 +149,13 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str, default='dgcnn', metavar='N',
                         choices=['pointnet', 'dgcnn'],
                         help='Model to use, [pointnet, dgcnn]')
-    parser.add_argument('--root', type=str, metavar='N',
+    parser.add_argument('--root', type=str, metavar='N',default='E:\\dataset',
                         help='folder of dataset')
     parser.add_argument('--batch_size', type=int, default=32, metavar='batch_size',
                         help='Size of batch')
     # parser.add_argument('--test_batch_size', type=int, default=16, metavar='batch_size',
     #                     help='Size of batch)')
-    parser.add_argument('--epochs', type=int, default=250, metavar='N',
+    parser.add_argument('--epochs', type=int, default=200, metavar='N',
                         help='number of episode to train ')
     parser.add_argument('--use_sgd', type=bool, default=True,
                         help='Use SGD')
@@ -172,7 +172,7 @@ if __name__ == '__main__':
                         help='random seed (default: 1)')
     parser.add_argument('--eval', type=bool,  default=False,
                         help='evaluate the model')
-    parser.add_argument('--num_points', type=int, default=2048,
+    parser.add_argument('--num_points', type=int, default=1024,
                         help='num of points to use')
     parser.add_argument('--dropout', type=float, default=0.5,
                         help='initial dropout rate')

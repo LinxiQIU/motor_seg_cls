@@ -1,0 +1,8 @@
+Namespace(batch_size=32, dropout=0.5, emb_dims=1024, epochs=250, eval=False, exp_name='exp', k=20, lr=0.001, model='dgcnn', momentum=0.9, no_cuda=False, num_points=2048, root='E:\\dataset', scheduler='cos', seed=1, use_sgd=True, validation_symbol='Validation')
+Using GPU : 0 from 1 devices
+Namespace(batch_size=32, dropout=0.5, emb_dims=1024, epochs=200, eval=False, exp_name='exp', k=20, lr=0.001, model='dgcnn', momentum=0.9, no_cuda=False, num_points=1024, root='E:\\dataset', scheduler='cos', seed=1, use_sgd=True, validation_symbol='Validation')
+Using GPU : 0 from 1 devices
+Namespace(batch_size=32, dropout=0.5, emb_dims=1024, epochs=200, eval=False, exp_name='exp', k=20, lr=0.001, model='dgcnn', momentum=0.9, no_cuda=False, num_points=1024, root='E:\\dataset', scheduler='cos', seed=1, use_sgd=True, validation_symbol='Validation')
+Using GPU : 0 from 1 devices
+Namespace(batch_size=32, dropout=0.5, emb_dims=1024, epochs=200, eval=False, exp_name='exp', k=20, lr=0.001, model='dgcnn', momentum=0.9, no_cuda=False, num_points=1024, root='E:\\dataset', scheduler='cos', seed=1, use_sgd=True, validation_symbol='Validation')
+Using GPU : 0 from 1 devices
