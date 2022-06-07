@@ -81,7 +81,7 @@ def train(args, io):
             data = data.permute(0, 2, 1)
             batch_size = data.size()[0]
             opt.zero_grad()
-            logits = model(data)
+            logits = model(data.float())
             loss = criterion(logits, label)
             loss.backward()
             opt.step()
