@@ -43,7 +43,7 @@ class MotorDataset(Dataset):
         for index in tqdm(range(len(self.datapath)), total=len(self.datapath)):
             fn = self.datapath[index]
             motor_type = self.classes[self.datapath[index][0]]
-            motor_type = np.array([motor_type]).astype(np.int32)
+            motor_type = np.array([motor_type]).astype(np.int64)
             point_set = np.load(fn[1])[:, 0:3]
             # point_set = pc_normalize(point_set)
             self.all_points[index] = point_set
@@ -59,7 +59,7 @@ class MotorDataset(Dataset):
         choice = np.random.choice(n_points, self.num_points, replace=True)
         point_set = point_set[choice, :]
         point_set = pc_normalize(point_set)
-        return point_set, label[0]
+        return point_set, label
 
 
 if __name__ == '__main__':
