@@ -17,7 +17,7 @@ from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 from data_cls import MotorDataset
 from model_cls import DGCNN_cls
-from utils import cal_loss, IOStream
+from util import cal_loss, IOStream
 import sklearn.metrics as metrics
 
 
