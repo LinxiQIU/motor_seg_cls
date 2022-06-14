@@ -28,7 +28,7 @@ from torchsummary import summary
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-classes = ['clampingSystem', 'cover', 'gearContainer', 'charger', 'bottom', 'sideBolt', 'coverBolt']
+classes = ['clamping_system', 'cover', 'gear_container', 'charger', 'bottom', 'side_bolt', 'cover_bolt']
 labels2categories={i:cls for i,cls in enumerate(classes)}       #dictionary for labels2categories
 
 
@@ -37,8 +37,8 @@ def _init_(add_string,change):
         os.makedirs('outputs')
     if not os.path.exists('outputs/'+args.model+'/'+args.exp):
         os.makedirs('outputs/'+args.model+'/'+args.exp)
-    if not os.path.exists('outputs/'+args.model+'/'+args.exp+'/'+change+add_string+'/'+'models'):
-        os.makedirs('outputs/'+args.model+'/'+args.exp+'/'+change+add_string+'/'+'models') 
+    if not os.path.exists('outputs/'+args.model+'/'+args.exp+'/'+ change + add_string+'/'+'models'):
+        os.makedirs('outputs/'+args.model+'/'+args.exp+'/'+ change + add_string+'/'+'models') 
 
 
           
@@ -57,14 +57,6 @@ def train(args, io):
     tmp=torch.cuda.max_memory_allocated()
     if args.model == 'dgcnn':
         model = DGCNN_semseg(args).to(device)
-    elif args.model == 'dgcnn_conv':
-        model = DGCNN_semseg_conv(args).to(device)
-    elif args.model =='dgcnn_self':
-        model = DGCNN_semseg_attention(args).to(device)
-    elif args.model =='dgcnn_3_layers_self':
-        model = DGCNN_semseg_3_layers_attention(args).to(device)
-    elif args.model == 'dgcnn_self_conv':
-        model = DGCNN_semseg_conv_attention(args).to(device)
     elif args.model == 'PCT':
         model = PCT_semseg(args).to(device)
     else:
@@ -112,15 +104,15 @@ def train(args, io):
             print('Use pretrain model')
         else:
             start_epoch=0
-            print('no exiting pretrained model,starting from scratch')
+            print('no exiting pretrained model, starting from scratch')
 
 
 
     criterion = cal_loss
     loss_cluster=nn.MSELoss()
-    NUM_CLASS=7
+    NUM_CLASS = 7
     best_iou = 0
-    best_bolts_iou=0
+    best_bolts_iou = 0
     for epoch in range(start_epoch,args.epochs):
         ####################
         # Train
@@ -166,8 +158,9 @@ def train(args, io):
 
         outstr = 'Train %d, loss: %.6f, train acc: %.6f ' % (epoch,(loss_sum / num_batches),(total_correct / float(total_seen)))
         io.cprint(outstr)
-        writer.add_scalar('Training mean loss', (loss_sum / num_batches), epoch)
-        writer.add_scalar('Training accuracy', (total_correct / float(total_seen)), epoch)
+        writer.add_scalar('Train mean Loss', (loss_sum / num_batches), epoch)
+        writer.add_scalar('Train accuracy', (total_correct / float(total_seen)), epoch)
+        writer.add_scalar('Train mean IoU', )
         ####################
         # Validation
         ####################
@@ -305,7 +298,7 @@ def test(args, io):
     print("Let's test and use", torch.cuda.device_count(), "GPUs!")
 
 
-    
+
 
     try:
         if args.finetune:
@@ -321,7 +314,7 @@ def test(args, io):
 
 
     criterion = cal_loss
-    NUM_CLASS=7
+    NUM_CLASS = 7
 
     ####################
     # Test
@@ -461,7 +454,7 @@ if __name__ == "__main__":
         add_string='_finetune'
     else:
         add_string=''
-    _init_(add_string,args.change)
+    _init_(add_string, args.change)
 
 
 

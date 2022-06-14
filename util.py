@@ -45,6 +45,7 @@ class PrintLog():
     def close(self):
         self.f.close()
 
+
 def normalize_data(batch_data):
     """ Normalize the batch data, use coordinates of the block centered at origin,
         Input:

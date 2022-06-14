@@ -16,19 +16,19 @@ import numpy as np
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 from data_cls import MotorDataset
-from model_cls import DGCNN_cls
+from model_cls import DGCNN_cls, PointNet_cls, PCT_cls
 from util import cal_loss, IOStream
 import sklearn.metrics as metrics
+from torch.utils.tensorboard import SummaryWriter
 
 
 def _init_():
     if not os.path.exists('outputs'):
         os.makedirs('outputs')
-    if not os.path.exists('outputs/' + args.exp_name):
-        os.makedirs('outputs/' + args.exp_name)
-    if not os.path.exists('outputs/' + args.exp_name + '/' +'models'):
-        os.makedirs('outputs/' + args.exp_name + '/' +'models') 
-                         
+    if not os.path.exists('outputs/' + args.model + '/' + args.exp_name):
+        os.makedirs('outputs/' + args.model + '/' + args.exp_name)
+    if not os.path.exists('outputs/' + args.model + '/' + args.exp_name + '/' + args.change + '/model'):
+        os.makedirs('outputs/' + args.model + '/' + args.exp_name + '/' + args.change + '/model')
 
 
 
@@ -45,6 +45,10 @@ def train(args, io):
     
     if args.model == 'dgcnn':
         model = DGCNN_cls(args).to(device)
+    elif args.model == 'pct':
+        model = PCT_cls(args).to(device)
+    elif args.model == 'pointnet':
+        model = PointNet_cls(args).to(device)
     else:
         raise Exception('Not implemented')
     print(str(model))
@@ -60,7 +64,7 @@ def train(args, io):
         opt = optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
     
     if args.scheduler == 'cos':
-        scheduler = CosineAnnealingLR(opt, args.epochs, eta_min=1e-3)
+        scheduler = CosineAnnealingLR(opt, args.epochs, eta_min=1e-5)
     elif args.scheduler == 'step':
         scheduler = StepLR(opt, step_size=20, gamma=0.7)
         
@@ -109,8 +113,12 @@ def train(args, io):
                                                                                      train_true, train_pred))    
             
         io.cprint(outstr)
+        writer.add_scalar('learning rate', opt.param_groups[0]['lr'], epoch)
+        writer.add_scalar('train loss', train_loss*1.0/count, epoch)
+        writer.add_scalar('train accuracy', metrics.accuracy_score(train_true, train_pred), epoch)
+        writer.add_scalar('train average accuracy', metrics.balanced_accuracy_score(train_true, train_pred), epoch)
         ####################
-        # Test
+        # Validation
         ####################
         test_loss = 0.0
         count = 0.0
@@ -137,6 +145,9 @@ def train(args, io):
                                                                               test_acc,
                                                                               avg_per_class_acc)
         io.cprint(outstr)
+        writer.add_scalar('val loss', test_loss*1.0/count, epoch)
+        writer.add_scalar('val accuracy', test_acc, epoch)
+        writer.add_scalar('val average accuracy', avg_per_class_acc, epoch)
         if test_acc >= best_test_acc:
             best_test_acc = test_acc
             torch.save(model.state_dict(), 'outputs/%s/models/model.t7' % args.exp_name)
@@ -146,12 +157,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Point Cloud Classification')
     parser.add_argument('--exp_name', type=str, default='exp', metavar='N',
                         help='Name of the experiment')
+    parser.add_argument('--change', type=str, default='hh', metavar='N',
+                        help='explict parameters in experiment')
     parser.add_argument('--model', type=str, default='dgcnn', metavar='N',
-                        choices=['pointnet', 'dgcnn'],
+                        choices=['pointnet', 'dgcnn', 'pct'],
                         help='Model to use, [pointnet, dgcnn]')
     parser.add_argument('--root', type=str, metavar='N',default='E:\\dataset',
                         help='folder of dataset')
-    parser.add_argument('--batch_size', type=int, default=32, metavar='batch_size',
+    parser.add_argument('--batch_size', type=int, default=16, metavar='batch_size',
                         help='Size of batch')
     # parser.add_argument('--test_batch_size', type=int, default=16, metavar='batch_size',
     #                     help='Size of batch)')
@@ -187,8 +200,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     _init_()
+
+    writer = SummaryWriter('outputs/' + args.model + '/' + args.exp_name + '/' + args.change)
     
-    io = IOStream('outputs\\' + args.exp_name + '\\run.log')
+    io = IOStream('outputs/' + args.model + '/' + args.exp_name + '/' + args.change + '/run.log')
     io.cprint(str(args))
     
     args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -199,9 +214,7 @@ if __name__ == '__main__':
         torch.cuda.manual_seed(args.seed)
     else:
         io.cprint('Using CPU')
-        
-    if not args.eval:
-        train(args, io)
+    train(args, io)
         
         
         

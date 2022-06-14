@@ -23,7 +23,7 @@ def pc_normalize(pc):
     return pc
 
 
-def Get_ObjectID(x) :    #get all kinds of ObjectID from numpy file
+def get_object_id(x) :    #get all kinds of ObjectID from numpy file
 
     dic = []
     for i in range(x.shape[0]):
@@ -34,17 +34,17 @@ def Get_ObjectID(x) :    #get all kinds of ObjectID from numpy file
 
 
 def densify_blots(patch_motor):
-    add=[]
+    add = []
     for i in range(len(patch_motor)):
         if (patch_motor[i][6]==6) or (patch_motor[i][6] == 5):
             add.append(patch_motor[i])
-    add=np.array(add)
-    twonn=NearestNeighbors(n_neighbors=2,algorithm='ball_tree').fit(add[:,0:3])
+    add = np.array(add)
+    twonn = NearestNeighbors(n_neighbors=2,algorithm='ball_tree').fit(add[:,0:3])
     _,indices=twonn.kneighbors(add[:,0:3])
-    inter=[]
+    inter = []
     for i in range(indices.shape[0]):
-        interpolation=np.zeros(7)
-        interpolation[3:7]=add[0][3:7]
+        interpolation = np.zeros(7)
+        interpolation[3:7] = add[0][3:7]
         #if the bolt points are closest to eachonter
         if(indices[indices[i][1]][1]==i):
             interpolation[0:3]=add[i][0:3]+(add[indices[i][1]][0:3]-add[i][0:3])/3
@@ -59,69 +59,70 @@ def densify_blots(patch_motor):
 class MotorDataset(Dataset):
     def __init__(self,split='train',data_root='directory to training data',num_points=4096,bolt_weight=1,test_area='Validation',block_size=1.0,sample_rate=1.0,transform=None):
         super().__init__()
-        self.num_points=num_points
-        self.block_size=block_size
-        self.transform=transform      
-        motor_list=sorted(os.listdir(data_root))        #list all subdirectory    
+        self.num_points = num_points
+        self.block_size = block_size
+        self.transform = transform      
+        motor_list = sorted(os.listdir(data_root))        #list all subdirectory    
         #motor_filter=[motor for motor in motor_list if 'Type' in motor]     #filter all the file, whose name has no Type      
         if split == 'train':        #load training files or validation files
-            motor_positions=[motor for motor in motor_list if '{}'.format(test_area) not in motor]
+            motor_positions = [motor for motor in motor_list if '{}'.format(test_area) not in motor]
         else:
-            motor_positions=[motor for motor in motor_list if '{}'.format(test_area) in motor]
+            motor_positions = [motor for motor in motor_list if '{}'.format(test_area) in motor]
 
         
         ######################load the np file###################################################    
         
-        self.motors_points=[]       #initial object_motor_points and object_motor_lables
+        self.motors_points = []       #initial object_motor_points and object_motor_lables
         self.motors_labels=[]      
-        num_points_eachmotor=[]     #initial a list to count the num of points for each motor   
-        label_num_eachtype=np.zeros(7)      #initial a array to count how much points is there for each type
+        num_points_eachmotor = []     #initial a list to count the num of points for each motor   
+        label_num_eachtype = np.zeros(7)      #initial a array to count how much points is there for each type
         for motor_position in tqdm(motor_positions,total=len(motor_positions)):
-            motor_directory=os.path.join(data_root,motor_position)
-            motor_data=np.load(motor_directory)
+            motor_directory = os.path.join(data_root,motor_position)
+            motor_data = np.load(motor_directory)
             # motor_data=densify_blots(motor_data)
-            # motor_data=densify_blots(motor_data)
-            motor_points=motor_data[:,0:6]
-            motor_labels=motor_data[:,6]            #result is a np array           
-            num_eachtype_in_one_motor,_=np.histogram(motor_labels, range(8))       #count how much points is there for each type(usage of np.histotram)
-            label_num_eachtype+=num_eachtype_in_one_motor
+            motor_points = motor_data[:, 0:6]
+            motor_labels = motor_data[:, 6]            #result is a np array           
+            num_eachtype_in_one_motor,_ = np.histogram(motor_labels, bins=7, range(8))       #count how much points is there for each type(usage of np.histotram)
+            label_num_eachtype += num_eachtype_in_one_motor
             self.motors_points.append(motor_points)
             self.motors_labels.append(motor_labels)
             num_points_eachmotor.append(motor_labels.size)
-        #id=Get_ObjectID(motor_data)
+        #id=get_object_id(motor_data)
         #print(id)
         ############################################################################################
 
 
         ###########according to lable_num_eachmotor and bolt_weight, caculate the labelweights######
-        # label_num_eachtype[-1]*=bolt_weight
-        # label_num_eachtype[-2]*=bolt_weight
-        labelweights=label_num_eachtype/np.sum(label_num_eachtype)
-        labelweights=np.power(labelweights/np.max(labelweights),1/3)
-        self.labelweight=labelweights/np.sum(labelweights)
+        label_num_eachtype = label_num_eachtype.astype(np.float32)
+        self.percentage = label_num_eachtype/np.sum(label_num_eachtype)
+        label_num_eachtype[-1] *= bolt_weight
+        label_num_eachtype[-2] *= bolt_weight
+        labelweights = label_num_eachtype/np.sum(label_num_eachtype)
+        labelweights = np.power(np.max(labelweights)/labelweights, 1/3)
+        self.labelweight = labelweights/np.sum(labelweights)
         ############################################################################################
 
 
         #############caculate the index for choose of points from the motor according to the number of points of a specific motor#########      
-        sample_prob_eachmotor=num_points_eachmotor/np.sum(num_points_eachmotor)     #probability for choosing from a specific motor      
-        num_interation=sample_rate*np.sum(num_points_eachmotor)/self.num_points     #num_of_all to choose npoints cloud       
-        self.motors_indes=[]        #initial motors_indes list    
+        sample_prob_eachmotor = num_points_eachmotor/np.sum(num_points_eachmotor)     #probability for choosing from a specific motor      
+        num_interation = sample_rate*np.sum(num_points_eachmotor)/self.num_points     #num_of_all to choose npoints cloud       
+        self.motors_indes = []        #initial motors_indes list    
         for index in range(len(num_points_eachmotor)):      #allocate the index according to probability
-            sample_times_to_onemotor=int(round(sample_prob_eachmotor[index]*num_interation))
-            motor_indes_onemotor=[index]*sample_times_to_onemotor
+            sample_times_to_onemotor = int(round(sample_prob_eachmotor[index]*num_interation))
+            motor_indes_onemotor = [index]*sample_times_to_onemotor
             self.motors_indes.extend(motor_indes_onemotor)
         ####################################################################################################################################
          
                 
     def __getitem__(self,index):
         
-        points=self.motors_points[self.motors_indes[index]][:,0:3]      #initialize the parameter
-        labels=self.motors_labels[self.motors_indes[index]]
-        n_points=points.shape[0]   
+        points = self.motors_points[self.motors_indes[index]][:,0:3]      #initialize the parameter
+        labels = self.motors_labels[self.motors_indes[index]]
+        n_points = points.shape[0]   
         ########################have a randow choose of points from points cloud#######################
-        choice=np.random.choice(n_points,self.num_points,replace=True)
-        chosed_points=points[choice,:]
-        chosed_labels=labels[choice]
+        choice = np.random.choice(n_points,self.num_points,replace=True)
+        chosed_points = points[choice,:]
+        chosed_labels = labels[choice]
         ###############################################################################################
 
         return chosed_points,chosed_labels
@@ -133,7 +134,7 @@ class MotorDataset(Dataset):
 class MotorDataset_validation(Dataset):
     def __init__(self,split='train',data_root='directory to training data',num_points=4096,bolt_weight=1,test_area='Validation',block_size=1.0,sample_rate=1.0,transform=None):
         super().__init__()
-        self.num_points=num_points
+        self.num_points = num_points
         self.block_size=block_size
         self.transform=transform      
         motor_list=sorted(os.listdir(data_root))        #list all subdirectory    
@@ -153,8 +154,8 @@ class MotorDataset_validation(Dataset):
         for motor_position in tqdm(motor_positions,total=len(motor_positions)):
             motor_directory=os.path.join(data_root,motor_position)
             motor_data=np.load(motor_directory)
-            motor_points=motor_data[:,0:6]
-            motor_labels=motor_data[:,6]            #result is a np array           
+            motor_points=motor_data[:, 0:6]
+            motor_labels=motor_data[:, 6]            #result is a np array           
             num_eachtype_in_one_motor,_=np.histogram(motor_labels, range(8))       #count how much points is there for each type(usage of np.histotram)
             label_num_eachtype+=num_eachtype_in_one_motor
             self.motors_points.append(motor_points)
@@ -166,7 +167,7 @@ class MotorDataset_validation(Dataset):
         ###########according to lable_num_eachmotor and bolt_weight, caculate the labelweights######
         # label_num_eachtype[-1]/=bolt_weight
         labelweights=label_num_eachtype/np.sum(label_num_eachtype)
-        labelweights=np.power(labelweights/np.max(labelweights),1/3)
+        labelweights=np.power(np.max(labelweights)/labelweights, 1/3)
         self.labelweight=labelweights/np.sum(labelweights)
         ############################################################################################
 
