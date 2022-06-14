@@ -113,10 +113,10 @@ def train(args, io):
                                                                                      train_true, train_pred))    
             
         io.cprint(outstr)
-        writer.add_scalar('learning rate', opt.param_groups[0]['lr'], epoch)
-        writer.add_scalar('train loss', train_loss*1.0/count, epoch)
-        writer.add_scalar('train accuracy', metrics.accuracy_score(train_true, train_pred), epoch)
-        writer.add_scalar('train average accuracy', metrics.balanced_accuracy_score(train_true, train_pred), epoch)
+        writer.add_scalar('learning rate sgd', opt.param_groups[0]['lr'], epoch)
+        writer.add_scalar('train loss sgd', train_loss*1.0/count, epoch)
+        writer.add_scalar('train accuracy sgd', metrics.accuracy_score(train_true, train_pred), epoch)
+        writer.add_scalar('train average accuracy sgd', metrics.balanced_accuracy_score(train_true, train_pred), epoch)
         ####################
         # Validation
         ####################
@@ -145,9 +145,9 @@ def train(args, io):
                                                                               test_acc,
                                                                               avg_per_class_acc)
         io.cprint(outstr)
-        writer.add_scalar('val loss', test_loss*1.0/count, epoch)
-        writer.add_scalar('val accuracy', test_acc, epoch)
-        writer.add_scalar('val average accuracy', avg_per_class_acc, epoch)
+        writer.add_scalar('val loss sgd', test_loss*1.0/count, epoch)
+        writer.add_scalar('val accuracy sgd', test_acc, epoch)
+        writer.add_scalar('val average accuracy sgd', avg_per_class_acc, epoch)
         if test_acc >= best_test_acc:
             best_test_acc = test_acc
             torch.save(model.state_dict(), 'outputs/%s/%s/%s/model.t7' % (args.model, args.exp_name, args.change))
@@ -170,7 +170,7 @@ if __name__ == '__main__':
     #                     help='Size of batch)')
     parser.add_argument('--epochs', type=int, default=200, metavar='N',
                         help='number of episode to train ')
-    parser.add_argument('--use_sgd', type=bool, default=False,
+    parser.add_argument('--use_sgd', type=bool, default=True,
                         help='Use SGD')
     parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                         help='learning rate (default: 0.001, 0.1 if using sgd)')
@@ -185,7 +185,7 @@ if __name__ == '__main__':
                         help='random seed (default: 1)')
     parser.add_argument('--eval', type=bool,  default=False,
                         help='evaluate the model')
-    parser.add_argument('--num_points', type=int, default=1024,
+    parser.add_argument('--num_points', type=int, default=2048,
                         help='num of points to use')
     parser.add_argument('--dropout', type=float, default=0.5,
                         help='initial dropout rate')
@@ -201,7 +201,7 @@ if __name__ == '__main__':
     
     _init_()
 
-    writer = SummaryWriter('outputs/' + args.model + '/' + args.exp_name + '/' + args.change + '/run')
+    writer = SummaryWriter('outputs/' + args.model + '/' + args.exp_name + '/' + args.change)
     
     io = IOStream('outputs/' + args.model + '/' + args.exp_name + '/' + args.change + '/result.log')
     io.cprint(str(args))
