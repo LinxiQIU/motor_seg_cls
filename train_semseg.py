@@ -113,7 +113,7 @@ def train(args, io):
     NUM_CLASS = 7
     best_iou = 0
     best_bolts_iou = 0
-    for epoch in range(start_epoch,args.epochs):
+    for epoch in range(start_epoch, args.epochs):
         ####################
         # Train
         ####################

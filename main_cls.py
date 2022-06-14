@@ -201,9 +201,9 @@ if __name__ == '__main__':
     
     _init_()
 
-    writer = SummaryWriter('outputs/' + args.model + '/' + args.exp_name + '/' + args.change)
+    writer = SummaryWriter('outputs/' + args.model + '/' + args.exp_name + '/' + args.change + '/run')
     
-    io = IOStream('outputs/' + args.model + '/' + args.exp_name + '/' + args.change + '/run.log')
+    io = IOStream('outputs/' + args.model + '/' + args.exp_name + '/' + args.change + '/result.log')
     io.cprint(str(args))
     
     args.cuda = not args.no_cuda and torch.cuda.is_available()
