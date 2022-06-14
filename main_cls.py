@@ -150,7 +150,7 @@ def train(args, io):
         writer.add_scalar('val average accuracy', avg_per_class_acc, epoch)
         if test_acc >= best_test_acc:
             best_test_acc = test_acc
-            torch.save(model.state_dict(), 'outputs/%s/%s/%s/model.t7' % args.model, args.exp_name, args.change)
+            torch.save(model.state_dict(), 'outputs/%s/%s/%s/model.t7' % (args.model, args.exp_name, args.change))
 
 
 if __name__ == '__main__':
@@ -170,7 +170,7 @@ if __name__ == '__main__':
     #                     help='Size of batch)')
     parser.add_argument('--epochs', type=int, default=200, metavar='N',
                         help='number of episode to train ')
-    parser.add_argument('--use_sgd', type=bool, default=True,
+    parser.add_argument('--use_sgd', type=bool, default=False,
                         help='Use SGD')
     parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                         help='learning rate (default: 0.001, 0.1 if using sgd)')
