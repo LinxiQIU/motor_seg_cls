@@ -150,7 +150,7 @@ def train(args, io):
         writer.add_scalar('val average accuracy', avg_per_class_acc, epoch)
         if test_acc >= best_test_acc:
             best_test_acc = test_acc
-            torch.save(model.state_dict(), 'outputs/%s/models/model.t7' % args.exp_name)
+            torch.save(model.state_dict(), 'outputs/%s/%s/%s/model.t7' % args.model, args.exp_name, args.change)
 
 
 if __name__ == '__main__':
