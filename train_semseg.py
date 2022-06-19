@@ -164,11 +164,11 @@ def train(args, io):
 
         outstr = 'Train %d, loss: %.6f, train acc: %.6f ' % (epoch,(loss_sum / num_batches),(total_correct / float(total_seen)))
         io.cprint(outstr)
-        writer.add_scalar('Train mean Loss', (loss_sum / num_batches), epoch)
-        writer.add_scalar('Train accuracy', (total_correct / float(total_seen)), epoch)
-        writer.add_scalar('Train mean IoU', (mIoU__), epoch)
-        writer.add_scalar('Train IoU of cover_bolt', (total_correct_class__[6]/float(total_iou_deno_class)), epoch)
-        writer.add_scalar('Train IoU of bolt',((total_correct_class__[6]+total_correct_class__[5]) / (float(total_iou_deno_class__[6])+float(total_iou_deno_class__[5]))), epoch)
+        writer.add_scalar('Loss/Train mean Loss', (loss_sum / num_batches), epoch)
+        writer.add_scalar('Accuracy/Train accuracy', (total_correct / float(total_seen)), epoch)
+        writer.add_scalar('mIoU/Train mean IoU', (mIoU__), epoch)
+        writer.add_scalar('IoU of cover_bolt/train', (total_correct_class__[6]/float(total_iou_deno_class__[6])), epoch)
+        writer.add_scalar('IoU of bolt/train',((total_correct_class__[6]+total_correct_class__[5]) / (float(total_iou_deno_class__[6])+float(total_iou_deno_class__[5]))), epoch)
         ####################
         # Validation
         ####################
@@ -271,11 +271,11 @@ def train(args, io):
             io.cprint('Best IoU of bolts: %f' % best_bolts_iou)
             io.cprint('\n\n')
         writer.add_scalar('learning rate', opt.param_groups[0]['lr'], epoch)
-        writer.add_scalar('Validation mean loss', loss_sum / num_batches, epoch)
-        writer.add_scalar('Validation accuracy', total_correct / float(total_seen), epoch)
-        writer.add_scalar('Validation mean MoU', mIoU, epoch)
-        writer.add_scalar('Validation IoU of bolt', (total_correct_class[5] + total_correct_class[6]) / (float(total_iou_deno_class[5]) + float(total_iou_deno_class[6])), epoch)
-        writer.add_scalar('Validation IoU of cover_bolt', total_correct_class[6] / float(total_iou_deno_class[6]), epoch)
+        writer.add_scalar('Loss/Validation mean loss', loss_sum / num_batches, epoch)
+        writer.add_scalar('Accuracy/Validation accuracy', total_correct / float(total_seen), epoch)
+        writer.add_scalar('mIoU/Validation mean MoU', mIoU, epoch)
+        writer.add_scalar('IoU of bolt/Validation', (total_correct_class[5] + total_correct_class[6]) / (float(total_iou_deno_class[5]) + float(total_iou_deno_class[6])), epoch)
+        writer.add_scalar('IoU of cover_bolt/Validation', total_correct_class[6] / float(total_iou_deno_class[6]), epoch)
 
     io.close()
 
@@ -389,10 +389,10 @@ def test(args, io):
 if __name__ == "__main__":
     # Training settings
     parser = argparse.ArgumentParser(description='Point Cloud Semantic Segmentation')
-    parser.add_argument('--model', type=str, default='dgcnn_self_conv', metavar='N',
-                        choices=['dgcnn','dgcnn_conv','dgcnn_self','dgcnn_3_layers_self','dgcnn_self_conv','PCT'],
+    parser.add_argument('--model', type=str, default='dgcnn', metavar='N',
+                        choices=['dgcnn', 'PCT'],
                         help='Model to use, [dgcnn]')
-    parser.add_argument('--batch_size', type=int, default=5, metavar='batch_size',
+    parser.add_argument('--batch_size', type=int, default=16, metavar='batch_size',
                         help='Size of batch)')
     parser.add_argument('--root', type=str, default='/home/bi/study/thesis/data/test', 
                         help='file need to be tested')
@@ -412,7 +412,7 @@ if __name__ == "__main__":
                         help='factor of loss_cluster')
     parser.add_argument('--test_batch_size', type=int, default=16, metavar='batch_size',
                         help='Size of batch)')
-    parser.add_argument('--epochs', type=int, default=400, metavar='N',
+    parser.add_argument('--epochs', type=int, default=200, metavar='N',
                         help='number of episode to train ')
     parser.add_argument('--use_sgd', type=bool, default=True,
                         help='Use SGD')
