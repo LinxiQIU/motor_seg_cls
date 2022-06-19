@@ -18,7 +18,7 @@ from sklearn.neighbors import NearestNeighbors
 def pc_normalize(pc):
     centroid=np.mean(pc,axis=0)
     pc=pc-centroid
-    max_distance=np.sqrt(np.max(np.sum(pc**2,axis=1)))
+    max_distance=np.sqrt(np.max(np.sum(pc**2, axis=1)))
     pc=pc/max_distance
     return pc
 
@@ -57,7 +57,7 @@ def densify_blots(patch_motor):
 
 
 class MotorDataset(Dataset):
-    def __init__(self,split='train',data_root='directory to training data',num_points=4096,bolt_weight=1,test_area='Validation',block_size=1.0,sample_rate=1.0,transform=None):
+    def __init__(self,split='train',data_root='directory to training data',num_points=2048,bolt_weight=1,test_area='Validation',block_size=1.0,sample_rate=1.0,transform=None):
         super().__init__()
         self.num_points = num_points
         self.block_size = block_size
@@ -82,7 +82,7 @@ class MotorDataset(Dataset):
             # motor_data=densify_blots(motor_data)
             motor_points = motor_data[:, 0:6]
             motor_labels = motor_data[:, 6]            #result is a np array           
-            num_eachtype_in_one_motor,_ = np.histogram(motor_labels, bins=7, range(8))       #count how much points is there for each type(usage of np.histotram)
+            num_eachtype_in_one_motor,_ = np.histogram(motor_labels, range(8))       #count how much points is there for each type(usage of np.histotram)
             label_num_eachtype += num_eachtype_in_one_motor
             self.motors_points.append(motor_points)
             self.motors_labels.append(motor_labels)
@@ -95,11 +95,11 @@ class MotorDataset(Dataset):
         ###########according to lable_num_eachmotor and bolt_weight, caculate the labelweights######
         label_num_eachtype = label_num_eachtype.astype(np.float32)
         self.percentage = label_num_eachtype/np.sum(label_num_eachtype)
-        label_num_eachtype[-1] *= bolt_weight
-        label_num_eachtype[-2] *= bolt_weight
-        labelweights = label_num_eachtype/np.sum(label_num_eachtype)
-        labelweights = np.power(np.max(labelweights)/labelweights, 1/3)
-        self.labelweight = labelweights/np.sum(labelweights)
+        # label_num_eachtype[-1] *= bolt_weight
+        # label_num_eachtype[-2] *= bolt_weight
+        # labelweights = label_num_eachtype/np.sum(label_num_eachtype)
+        # labelweights = np.power(np.max(labelweights)/labelweights, 1/3)
+        # self.labelweight = labelweights/np.sum(labelweights)
         ############################################################################################
 
 
@@ -120,9 +120,9 @@ class MotorDataset(Dataset):
         labels = self.motors_labels[self.motors_indes[index]]
         n_points = points.shape[0]   
         ########################have a randow choose of points from points cloud#######################
-        choice = np.random.choice(n_points,self.num_points,replace=True)
-        chosed_points = points[choice,:]
-        chosed_labels = labels[choice]
+        choose = np.random.choice(n_points,self.num_points,replace=True)
+        chosed_points = points[choose,:]
+        chosed_labels = labels[choose]
         ###############################################################################################
 
         return chosed_points,chosed_labels
@@ -132,7 +132,7 @@ class MotorDataset(Dataset):
 
 
 class MotorDataset_validation(Dataset):
-    def __init__(self,split='train',data_root='directory to training data',num_points=4096,bolt_weight=1,test_area='Validation',block_size=1.0,sample_rate=1.0,transform=None):
+    def __init__(self,split='train',data_root='directory to training data',num_points=2048,bolt_weight=1,test_area='Validation',block_size=1.0,sample_rate=1.0,transform=None):
         super().__init__()
         self.num_points = num_points
         self.block_size=block_size
@@ -166,9 +166,9 @@ class MotorDataset_validation(Dataset):
 
         ###########according to lable_num_eachmotor and bolt_weight, caculate the labelweights######
         # label_num_eachtype[-1]/=bolt_weight
-        labelweights=label_num_eachtype/np.sum(label_num_eachtype)
-        labelweights=np.power(np.max(labelweights)/labelweights, 1/3)
-        self.labelweight=labelweights/np.sum(labelweights)
+        # labelweights=label_num_eachtype/np.sum(label_num_eachtype)
+        # labelweights=np.power(np.max(labelweights)/labelweights, 1/3)
+        # self.labelweight=labelweights/np.sum(labelweights)
         ############################################################################################
 
 
@@ -193,9 +193,9 @@ class MotorDataset_validation(Dataset):
 
 
         ########################have a randow choose of points from points cloud#######################
-        choice=np.random.choice(n_points,self.num_points,replace=True)
-        chosed_points=points[choice,:]
-        chosed_labels=labels[choice]
+        choose = np.random.choice(n_points,self.num_points,replace=True)
+        chosed_points = points[choose,:]
+        chosed_labels = labels[choose]
         ###############################################################################################
 
         return chosed_points,chosed_labels

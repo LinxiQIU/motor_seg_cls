@@ -36,11 +36,11 @@ def train(args, io):
     train_loader = DataLoader(MotorDataset(root=args.root, split='train', 
                                            num_points=args.num_points, 
                                            test_area=args.validation_symbol),
-                              batch_size=args.batch_size, shuffle=True, drop_last=True)
+                              num_workers=8, batch_size=args.batch_size, shuffle=True, drop_last=False)
     test_loader = DataLoader(MotorDataset(root=args.root, split='test', 
                                           num_points=args.num_points,
                                           test_area=args.validation_symbol),
-                             batch_size=args.batch_size, shuffle=True, drop_last=True)
+                             num_workers=8, batch_size=args.batch_size, shuffle=True, drop_last=False)
     device = torch.device('cuda' if args.cuda else 'cpu')
     
     if args.model == 'dgcnn':
@@ -166,8 +166,8 @@ if __name__ == '__main__':
                         help='folder of dataset')
     parser.add_argument('--batch_size', type=int, default=16, metavar='batch_size',
                         help='Size of batch')
-    # parser.add_argument('--test_batch_size', type=int, default=16, metavar='batch_size',
-    #                     help='Size of batch)')
+    parser.add_argument('--test_batch_size', type=int, default=16, metavar='batch_size',
+                        help='Size of batch)')
     parser.add_argument('--epochs', type=int, default=200, metavar='N',
                         help='number of episode to train ')
     parser.add_argument('--use_sgd', type=bool, default=True,

@@ -20,7 +20,7 @@ def pc_normalize(pc):
 
 
 class MotorDataset(Dataset):
-    def __init__(self, root, split='train', num_points=4096, test_area=None,
+    def __init__(self, root, split='train', num_points=2048, test_area=None,
                   block_size=1.0, transform=None):
         super().__init__()
         self.root = root
@@ -65,10 +65,12 @@ class MotorDataset(Dataset):
 if __name__ == '__main__':
     import torch
     data = MotorDataset('E:\\dataset', split='train', test_area='Validation')
-    Dataloader = torch.utils.data.DataLoader(data, batch_size=32, shuffle=True)
+    Dataloader = torch.utils.data.DataLoader(data, batch_size=16, shuffle=True)
     for point, label in Dataloader:
-        print(point.shape)
-        print(label)
+        print(point.size(0))
+        print(point.size(2))
+        # print(point.shape)
+        # print(label.shape)
         
         
         

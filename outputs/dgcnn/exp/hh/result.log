@@ -1,0 +1,3 @@
+Namespace(batch_size=16, change='hh', dropout=0.5, emb_dims=1024, epochs=200, eval=False, exp_name='exp', k=20, lr=0.001, model='dgcnn', momentum=0.9, no_cuda=False, num_points=2048, root='E:\\dataset', scheduler='cos', seed=1, test_batch_size=16, use_sgd=True, validation_symbol='Validation')
+Using GPU : 0 from 1 devices
+Train 0, loss: 2.398853, train acc: 0.190000, train avg acc: 0.190000
