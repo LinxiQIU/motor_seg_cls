@@ -29,7 +29,7 @@ from torchsummary import summary
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 classes = ['clamping_system', 'cover', 'gear_container', 'charger', 'bottom', 'side_bolt', 'cover_bolt']
-labels2categories={i:cls for i,cls in enumerate(classes)}       #dictionary for labels2categories
+labels2categories = {i:cls for i,cls in enumerate(classes)}       #dictionary for labels2categories
 
 
 def _init_(add_string,change):
@@ -54,7 +54,7 @@ def train(args, io):
     device = torch.device("cuda" if args.cuda else "cpu")
 
     #Try to load models
-    tmp=torch.cuda.max_memory_allocated()
+    tmp = torch.cuda.max_memory_allocated()
     if args.model == 'dgcnn':
         model = DGCNN_semseg(args).to(device)
     elif args.model == 'PCT':
@@ -74,7 +74,7 @@ def train(args, io):
         opt = optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
 
     if args.scheduler == 'cos':
-        scheduler = CosineAnnealingLR(opt, args.epochs, eta_min=1e-3)
+        scheduler = CosineAnnealingLR(opt, args.epochs, eta_min=1e-5)
     elif args.scheduler == 'step':
         scheduler = StepLR(opt, 20, 0.1, args.epochs)
     
@@ -123,22 +123,23 @@ def train(args, io):
         loss_sum=0
         model=model.train()
         args.training=True
+        total_correct_class__ = [0 for _ in range(NUM_CLASS)]
+        total_iou_deno_class__ = [0 for _ in range(NUM_CLASS)]
 
-        for i,(points,target) in tqdm(enumerate(train_loader),total=len(train_loader),smoothing=0.9):
+        for i,(points,target) in tqdm(enumerate(train_loader), total=len(train_loader), smoothing=0.9):
             points, target = points.to(device), target.to(device)       #(batch_size, num_points, features)    (batch_size, num_points)
-            points=normalize_data(points)                               #[bs,4096,3]
-            if not args.finetune:
-                points=rotate_180_z(points)
+            points = normalize_data(points)                               #[bs,4096,3]
+            # if not args.finetune:
+            #     points=rotate_180_z(points)
             #Visuell_PointCloud_per_batch_according_to_label(points,target)
-            points = points.permute(0, 2, 1)                            #(batch_size,features,numpoints)
+            points = points.permute(0, 2, 1)                            #(batch_size, features, num_points)
             batch_size = points.size()[0]
             opt.zero_grad()
-            seg_pred,trans,result,goal = model(points.float(),target)        #(batch_size, class_categories, num_points)
+            seg_pred,trans,result,goal = model(points.float(), target)        #(batch_size, class_categories, num_points)
             seg_pred = seg_pred.permute(0, 2, 1).contiguous()                      #(batch_size,num_points, class_categories)
             batch_label = target.view(-1, 1)[:, 0].cpu().data.numpy()              #array(batch_size*num_points)
             loss = criterion(seg_pred.view(-1, NUM_CLASS), target.view(-1,1).squeeze())     #a scalar
-            if "My_Net4" in args.model or "My_Net5" in args.model or "My_Net6" in args.model or "My_Net7" in args.model:
-                loss=loss+loss_cluster(result,goal)*args.factor_cluster
+            # loss = loss + loss_cluster(result, goal)*args.factor_cluster
             loss.backward()
             opt.step()
             seg_pred = seg_pred.contiguous().view(-1, NUM_CLASS)                    # (batch_size*num_points , num_class)
@@ -147,6 +148,11 @@ def train(args, io):
             total_correct += correct
             total_seen += (batch_size * NUM_POINT)
             loss_sum += loss
+            for l in range(NUM_CLASS):
+                total_correct_class__[l] += np.sum((pred_choice == l) & (batch_label == l))
+                total_iou_deno_class__[l] += np.sum(((pred_choice == l) | (batch_label == l)))
+        mIoU__ = np.mean(np.array(total_correct_class__) / (np.array(total_iou_deno_class__, dtype=np.float64) + 1e-6))
+
         if args.scheduler == 'cos':
             scheduler.step()
         elif args.scheduler == 'step':
@@ -160,7 +166,9 @@ def train(args, io):
         io.cprint(outstr)
         writer.add_scalar('Train mean Loss', (loss_sum / num_batches), epoch)
         writer.add_scalar('Train accuracy', (total_correct / float(total_seen)), epoch)
-        writer.add_scalar('Train mean IoU', )
+        writer.add_scalar('Train mean IoU', (mIoU__), epoch)
+        writer.add_scalar('Train IoU of cover_bolt', (total_correct_class__[6]/float(total_iou_deno_class)), epoch)
+        writer.add_scalar('Train IoU of bolt',((total_correct_class__[6]+total_correct_class__[5]) / (float(total_iou_deno_class__[6])+float(total_iou_deno_class__[5]))), epoch)
         ####################
         # Validation
         ####################
@@ -176,29 +184,28 @@ def train(args, io):
             noBG_seen_class = [0 for _ in range(NUM_CLASS-1)]
             noBG_correct_class = [0 for _ in range(NUM_CLASS-1)]
             noBG_iou_deno_class = [0 for _ in range(NUM_CLASS-1)]
-            model=model.eval()
-            args.training=False
+            model = model.eval()
+            args.training = False
 
-            for i,(points,seg) in tqdm(enumerate(test_loader),total=len(test_loader),smoothing=0.9):
+            for i, (points,seg) in tqdm(enumerate(test_loader),total=len(test_loader),smoothing=0.9):
                 points, seg = points.to(device), seg.to(device)
-                points=normalize_data(points)
-                if not args.finetune:
-                    points=rotate_180_z(points)
-                
+                points = normalize_data(points)
+                # if not args.finetune:
+                #     points=rotate_180_z(points)         
                 points = points.permute(0, 2, 1)
                 batch_size = points.size()[0]
-                seg_pred,trans,result_,goal_= model(points,seg)
+                seg_pred,trans,result_,goal_= model(points, seg)
                 seg_pred = seg_pred.permute(0, 2, 1).contiguous()
                 batch_label = seg.view(-1, 1)[:, 0].cpu().data.numpy()   #array(batch_size*num_points)
                 loss = criterion(seg_pred.view(-1, NUM_CLASS), seg.view(-1,1).squeeze())
-                if "My_Net4" in args.model or "My_Net5" in args.model or "My_Net6" in args.model or "My_Net7" in args.model:
-                    loss=loss+loss_cluster(result,goal)*args.factor_cluster
+                # if "My_Net4" in args.model or "My_Net5" in args.model or "My_Net6" in args.model or "My_Net7" in args.model:
+                #     loss=loss+loss_cluster(result,goal)*args.factor_cluster
                 seg_pred = seg_pred.contiguous().view(-1, NUM_CLASS)   # (batch_size*num_points , num_class)
                 pred_choice = seg_pred.cpu().data.max(1)[1].numpy()  #array(batch_size*num_points)
                 correct = np.sum(pred_choice == batch_label)
                 total_correct += correct
                 total_seen += (batch_size * NUM_POINT)
-                loss_sum+=loss
+                loss_sum += loss
                 tmp, _ = np.histogram(batch_label, range(NUM_CLASS + 1))
                 labelweights += tmp
                 for l in range(NUM_CLASS):
@@ -247,7 +254,7 @@ def train(args, io):
                 io.cprint('Saving best model at %s' % savepath)
                 torch.save(state, savepath)
             io.cprint('Best mIoU: %f' % best_iou)
-            cur_bolts_iou=total_correct_class[5] / float(total_iou_deno_class[5])
+            cur_bolts_iou=(total_correct_class[5] + total_correct_class[6]) / (float(total_iou_deno_class[5]) + float(total_iou_deno_class[6]))
             if cur_bolts_iou >= best_bolts_iou:
                 best_bolts_iou=cur_bolts_iou
                 if args.finetune:
@@ -263,10 +270,12 @@ def train(args, io):
                 torch.save(state, savepath)
             io.cprint('Best IoU of bolts: %f' % best_bolts_iou)
             io.cprint('\n\n')
-        writer.add_scalar('Validation mean loss', (loss_sum / num_batches), epoch)
-        writer.add_scalar('Validation accuracy', (total_correct / float(total_seen)), epoch)
-        writer.add_scalar('Mean MoU', (mIoU), epoch)
-        writer.add_scalar('Validation mloU of bolts',(total_correct_class[5] / float(total_iou_deno_class[5])), epoch)
+        writer.add_scalar('learning rate', opt.param_groups[0]['lr'], epoch)
+        writer.add_scalar('Validation mean loss', loss_sum / num_batches, epoch)
+        writer.add_scalar('Validation accuracy', total_correct / float(total_seen), epoch)
+        writer.add_scalar('Validation mean MoU', mIoU, epoch)
+        writer.add_scalar('Validation IoU of bolt', (total_correct_class[5] + total_correct_class[6]) / (float(total_iou_deno_class[5]) + float(total_iou_deno_class[6])), epoch)
+        writer.add_scalar('Validation IoU of cover_bolt', total_correct_class[6] / float(total_iou_deno_class[6]), epoch)
 
     io.close()
 
@@ -281,14 +290,6 @@ def test(args, io):
     #Try to load models
     if args.model == 'dgcnn':
         model = DGCNN_semseg(args).to(device)
-    elif args.model == 'dgcnn_con':
-        model = DGCNN_semseg_conv(args).to(device)
-    elif args.model =='dgcnn_self':
-        model = DGCNN_semseg_attention(args).to(device)
-    elif args.model =='dgcnn_3_layers_self':
-        model = DGCNN_semseg_3_layers_attention(args).to(device)
-    elif args.model == 'dgcnn_self_con':
-        model = DGCNN_semseg_conv_attention(args).to(device)
     elif args.model == 'PCT':
         model = PCT_semseg(args).to(device)
     else:
