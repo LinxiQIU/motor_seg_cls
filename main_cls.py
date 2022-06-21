@@ -153,6 +153,41 @@ def train(args, io):
             torch.save(model.state_dict(), 'outputs/%s/%s/%s/model.t7' % (args.model, args.exp_name, args.change))
 
 
+def test(args, io):
+    test_loader = DataLoader(MotorDataset(root=args.root, split='train', 
+                                           num_points=args.num_points, 
+                                           test_area=args.validation_symbol),
+                              num_workers=8, batch_size=args.batch_size, shuffle=True, drop_last=True)
+
+    device = torch.device("cuda" if args.cuda else "cpu")
+
+    if args.model == 'dgcnn':
+        model = DGCNN_cls(args).to(device)
+
+    model = nn.DataParallel(model)
+    model.load_state_dict(torch.load(args.model_path))
+    model = model.eval()
+    test_acc = 0.0
+    count = 0.0
+    test_true = []
+    test_pred = []
+    for data, label in test_loader:
+
+        data, label = data.to(device), label.to(device).squeeze()
+        data = data.permute(0, 2, 1)
+        batch_size = data.size()[0]
+        logits = model(data)
+        preds = logits.max(dim=1)[1]
+        test_true.append(label.cpu().numpy())
+        test_pred.append(preds.detach().cpu().numpy())
+    test_true = np.concatenate(test_true)
+    test_pred = np.concatenate(test_pred)
+    test_acc = metrics.accuracy_score(test_true, test_pred)
+    avg_per_class_acc = metrics.balanced_accuracy_score(test_true, test_pred)
+    outstr = 'Test :: test acc: %.6f, test avg acc: %.6f'%(test_acc, avg_per_class_acc)
+    io.cprint(outstr)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Point Cloud Classification')
     parser.add_argument('--exp_name', type=str, default='exp', metavar='N',
@@ -195,8 +230,8 @@ if __name__ == '__main__':
                         help='Num of nearest neighbors to use')
     parser.add_argument('--validation_symbol', type=str, default='Validation', 
                         help='Which datablocks to use for validation')
-    # parser.add_argument('--model_path', type=str, default='', metavar='N',
-    #                     help='Pretrained model path')
+    parser.add_argument('--model_path', type=str, default='', metavar='N',
+                        help='Pretrained model path')
     args = parser.parse_args()
     
     _init_()
@@ -214,7 +249,11 @@ if __name__ == '__main__':
         torch.cuda.manual_seed(args.seed)
     else:
         io.cprint('Using CPU')
-    train(args, io)
+    
+    if not args.eval:
+        train(args, io)
+    else:
+        test(args, io)
         
         
         
