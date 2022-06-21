@@ -176,7 +176,7 @@ def test(args, io):
         data, label = data.to(device), label.to(device).squeeze()
         data = data.permute(0, 2, 1)
         batch_size = data.size()[0]
-        logits = model(data)
+        logits = model(data.float())
         preds = logits.max(dim=1)[1]
         test_true.append(label.cpu().numpy())
         test_pred.append(preds.detach().cpu().numpy())
