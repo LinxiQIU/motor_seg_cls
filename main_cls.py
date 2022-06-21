@@ -64,7 +64,7 @@ def train(args, io):
         opt = optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
     
     if args.scheduler == 'cos':
-        scheduler = CosineAnnealingLR(opt, args.epochs, eta_min=1e-5)
+        scheduler = CosineAnnealingLR(opt, args.epochs, eta_min=1e-3)
     elif args.scheduler == 'step':
         scheduler = StepLR(opt, step_size=20, gamma=0.7)
         
@@ -184,7 +184,7 @@ def test(args, io):
     test_pred = np.concatenate(test_pred)
     test_acc = metrics.accuracy_score(test_true, test_pred)
     avg_per_class_acc = metrics.balanced_accuracy_score(test_true, test_pred)
-    
+
     outstr = 'Test :: test acc: %.6f, test avg acc: %.6f'%(test_acc, avg_per_class_acc)
     io.cprint(outstr)
 
