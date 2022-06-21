@@ -113,10 +113,10 @@ def train(args, io):
                                                                                      train_true, train_pred))    
             
         io.cprint(outstr)
-        writer.add_scalar('learning rate sgd', opt.param_groups[0]['lr'], epoch)
-        writer.add_scalar('train loss sgd', train_loss*1.0/count, epoch)
-        writer.add_scalar('train accuracy sgd', metrics.accuracy_score(train_true, train_pred), epoch)
-        writer.add_scalar('train average accuracy sgd', metrics.balanced_accuracy_score(train_true, train_pred), epoch)
+        writer.add_scalar('learning rate/lr', opt.param_groups[0]['lr'], epoch)
+        writer.add_scalar('Loss/train loss', train_loss*1.0/count, epoch)
+        writer.add_scalar('Accuracy/train acc', metrics.accuracy_score(train_true, train_pred), epoch)
+        writer.add_scalar('Average Accuracy/train avg acc', metrics.balanced_accuracy_score(train_true, train_pred), epoch)
         ####################
         # Validation
         ####################
@@ -145,9 +145,9 @@ def train(args, io):
                                                                               test_acc,
                                                                               avg_per_class_acc)
         io.cprint(outstr)
-        writer.add_scalar('val loss sgd', test_loss*1.0/count, epoch)
-        writer.add_scalar('val accuracy sgd', test_acc, epoch)
-        writer.add_scalar('val average accuracy sgd', avg_per_class_acc, epoch)
+        writer.add_scalar('Loss/val loss', test_loss*1.0/count, epoch)
+        writer.add_scalar('Accuracy/val acc', test_acc, epoch)
+        writer.add_scalar('Average Accuracy/val avg acc', avg_per_class_acc, epoch)
         if test_acc >= best_test_acc:
             best_test_acc = test_acc
             torch.save(model.state_dict(), 'outputs/%s/%s/%s/model.t7' % (args.model, args.exp_name, args.change))
@@ -171,8 +171,8 @@ def test(args, io):
     count = 0.0
     test_true = []
     test_pred = []
-    for data, label in test_loader:
 
+    for data, label in test_loader:
         data, label = data.to(device), label.to(device).squeeze()
         data = data.permute(0, 2, 1)
         batch_size = data.size()[0]
@@ -184,6 +184,7 @@ def test(args, io):
     test_pred = np.concatenate(test_pred)
     test_acc = metrics.accuracy_score(test_true, test_pred)
     avg_per_class_acc = metrics.balanced_accuracy_score(test_true, test_pred)
+    
     outstr = 'Test :: test acc: %.6f, test avg acc: %.6f'%(test_acc, avg_per_class_acc)
     io.cprint(outstr)
 
