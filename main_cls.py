@@ -53,7 +53,7 @@ def train(args, io):
         raise Exception('Not implemented')
     print(str(model))
     model = nn.DataParallel(model)
-    print("Let's use", torch.cuda.device_count())
+    print("Let's use", torch.cuda.device_count(), "GPU!")
     
     if args.opt == 'sgd':
         print("Use SGD")
@@ -209,7 +209,7 @@ if __name__ == '__main__':
                         help='Size of batch)')
     parser.add_argument('--epochs', type=int, default=200, metavar='N',
                         help='number of episode to train ')
-    parser.add_argument('--opt', type=str, default='sgd', choices=['sgd', 'adam', 'admw'],
+    parser.add_argument('--opt', type=str, default='sgd', choices=['sgd', 'adam', 'adamw'],
                         help='optimizer to use, [SGD, Adam, AdamW]')
     parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                         help='learning rate (default: 0.001, 0.1 if using sgd)')
