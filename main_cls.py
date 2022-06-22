@@ -55,18 +55,21 @@ def train(args, io):
     model = nn.DataParallel(model)
     print("Let's use", torch.cuda.device_count())
     
-    if args.use_sgd:
+    if args.opt == 'sgd':
         print("Use SGD")
         opt = optim.SGD(model.parameters(), lr=args.lr*100, momentum=args.momentum, 
                         weight_decay=1e-4)
-    else:
+    elif args.opt == 'adam':
         print("Use Adam")
         opt = optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
+    elif args.opt == 'adamw':
+        print("Use AdamW")
+        opt = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
     
     if args.scheduler == 'cos':
-        scheduler = CosineAnnealingLR(opt, args.epochs, eta_min=1e-3)
+        scheduler = CosineAnnealingLR(opt, args.epochs, eta_min=1e-5)
     elif args.scheduler == 'step':
-        scheduler = StepLR(opt, step_size=20, gamma=0.7)
+        scheduler = StepLR(opt, step_size=60, gamma=0.2)
         
     criterion = cal_loss
     
@@ -196,8 +199,8 @@ if __name__ == '__main__':
     parser.add_argument('--change', type=str, default='hh', metavar='N',
                         help='explict parameters in experiment')
     parser.add_argument('--model', type=str, default='dgcnn', metavar='N',
-                        choices=['pointnet', 'dgcnn', 'pct'],
-                        help='Model to use, [pointnet, dgcnn]')
+                        choices=['dgcnn', 'pct'],
+                        help='Model to use, [dgcnn, pct]')
     parser.add_argument('--root', type=str, metavar='N',default='E:\\dataset',
                         help='folder of dataset')
     parser.add_argument('--batch_size', type=int, default=16, metavar='batch_size',
@@ -206,8 +209,8 @@ if __name__ == '__main__':
                         help='Size of batch)')
     parser.add_argument('--epochs', type=int, default=200, metavar='N',
                         help='number of episode to train ')
-    parser.add_argument('--use_sgd', type=bool, default=True,
-                        help='Use SGD')
+    parser.add_argument('--opt', type=str, default='sgd', choices=['sgd', 'adam', 'admw']
+                        help='optimizer to use, [SGD, Adam, AdamW]')
     parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                         help='learning rate (default: 0.001, 0.1 if using sgd)')
     parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
