@@ -121,12 +121,12 @@ class MotorDataset(Dataset):
         
         n_points = points.shape[0]   
         ########################have a randow choose of points from points cloud#######################
-        choose = np.random.choice(n_points,self.num_points,replace=True)
+        choose = np.random.choice(n_points, self.num_points, replace=True)
         chosed_points = points[choose,:]
         chosed_labels = labels[choose]
         ###############################################################################################
 
-        return chosed_points,chosed_labels
+        return chosed_points, chosed_labels
 
     def __len__(self):                                                                            
         return len(self.motors_indes) 

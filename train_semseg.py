@@ -126,9 +126,9 @@ def train(args, io):
         total_correct_class__ = [0 for _ in range(NUM_CLASS)]
         total_iou_deno_class__ = [0 for _ in range(NUM_CLASS)]
 
-        for i,(points,target) in tqdm(enumerate(train_loader), total=len(train_loader), smoothing=0.9):
+        for i, (points,target) in tqdm(enumerate(train_loader), total=len(train_loader), smoothing=0.9):
             points, target = points.to(device), target.to(device)       #(batch_size, num_points, features)    (batch_size, num_points)
-            points = normalize_data(points)                               #[bs,4096,3]
+            points = normalize_data(points)                               #[bs, 2048, 3]
             # if not args.finetune:
             #     points=rotate_180_z(points)
             #Visuell_PointCloud_per_batch_according_to_label(points,target)
@@ -336,7 +336,7 @@ def test(args, io):
 
         for i,(data,seg) in tqdm(enumerate(test_loader),total=len(test_loader),smoothing=0.9):
             data, seg = data.to(device), seg.to(device)
-            data=normalize_data(data)
+            data = normalize_data(data)
             data = data.permute(0, 2, 1)
             batch_size = data.size()[0]
             seg_pred,trans,_,_ = model(data,seg)
@@ -434,7 +434,7 @@ if __name__ == "__main__":
     parser.add_argument('--k', type=int, default=20, metavar='N',
                         help='Num of nearest neighbors to use')
     parser.add_argument('--npoints', type=int, default=2048, 
-                        help='Point Number [default: 4096]')
+                        help='Point Number [default: 2048]')
     parser.add_argument('--validation_symbol', type=str, default='Validation', 
                         help='Which datablocks to use for validation')
     parser.add_argument('--test_symbol', type=str, default='Test', 

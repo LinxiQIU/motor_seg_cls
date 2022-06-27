@@ -16,7 +16,7 @@ import numpy as np
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 from data_cls import MotorDataset
-from model_cls import DGCNN_cls, PointNet_cls, PCT_cls
+from model_cls import DGCNN_cls, PCT_cls
 from util import cal_loss, IOStream
 import sklearn.metrics as metrics
 from torch.utils.tensorboard import SummaryWriter
@@ -47,8 +47,6 @@ def train(args, io):
         model = DGCNN_cls(args).to(device)
     elif args.model == 'pct':
         model = PCT_cls(args).to(device)
-    elif args.model == 'pointnet':
-        model = PointNet_cls(args).to(device)
     else:
         raise Exception('Not implemented')
     print(str(model))
@@ -73,12 +71,12 @@ def train(args, io):
         
     criterion = cal_loss
     
-    best_test_acc = 0
+    best_val_acc = 0
     for epoch in range(args.epochs):
         ####################
         # Train
         ####################
-        train_loss =0.0
+        train_loss = 0.0
         count = 0
         model.train()
         train_pred = []
@@ -123,11 +121,11 @@ def train(args, io):
         ####################
         # Validation
         ####################
-        test_loss = 0.0
+        val_loss = 0.0
         count = 0.0
         model.eval()
-        test_pred = []
-        test_true = []
+        val_pred = []
+        val_true = []
         for data, label in test_loader:
             data, label = data.to(device), label.to(device).squeeze()
             data = data.permute(0, 2, 1)
@@ -136,23 +134,23 @@ def train(args, io):
             loss = criterion(logits, label)
             preds = logits.max(dim=1)[1]
             count += batch_size
-            test_loss += loss.item() * batch_size
-            test_true.append(label.cpu().numpy())
-            test_pred.append(preds.detach().cpu().numpy())
-        test_true = np.concatenate(test_true)
-        test_pred = np.concatenate(test_pred)
-        test_acc = metrics.accuracy_score(test_true, test_pred)
-        avg_per_class_acc = metrics.balanced_accuracy_score(test_true, test_pred)
+            val_loss += loss.item() * batch_size
+            val_true.append(label.cpu().numpy())
+            val_pred.append(preds.detach().cpu().numpy())
+        val_true = np.concatenate(val_true)
+        val_pred = np.concatenate(val_pred)
+        val_acc = metrics.accuracy_score(val_true, val_pred)
+        avg_per_class_acc = metrics.balanced_accuracy_score(val_true, val_pred)
         outstr = 'Test %d, loss: %.6f, test acc: %.6f, test avg acc: %.6f' % (epoch,
-                                                                              test_loss*1.0/count,
-                                                                              test_acc,
+                                                                              val_loss*1.0/count,
+                                                                              val_acc,
                                                                               avg_per_class_acc)
         io.cprint(outstr)
-        writer.add_scalar('Loss/val loss', test_loss*1.0/count, epoch)
-        writer.add_scalar('Accuracy/val acc', test_acc, epoch)
+        writer.add_scalar('Loss/val loss', val_loss*1.0/count, epoch)
+        writer.add_scalar('Accuracy/val acc', val_acc, epoch)
         writer.add_scalar('Average Accuracy/val avg acc', avg_per_class_acc, epoch)
-        if test_acc >= best_test_acc:
-            best_test_acc = test_acc
+        if val_acc >= best_val_acc:
+            best_val_acc = val_acc
             torch.save(model.state_dict(), 'outputs/%s/%s/%s/model.t7' % (args.model, args.exp_name, args.change))
 
 
