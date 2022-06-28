@@ -80,23 +80,32 @@ class DGCNN_cls_semseg(nn.Module):
         self.bn7 = nn.BatchNorm1d(256)
 
         self.conv1 = nn.Sequential(nn.Conv2d(6, 64, kernel_size=1, bias=False),
-            self.bn1, nn.LeakyReLU(negative_slope=0.2))
+                                   self.bn1, 
+                                   nn.LeakyReLU(negative_slope=0.2))
         self.conv2 = nn.Sequential(nn.Conv2d(64*2, 64, kernel_size=1, bias=False),
-            self.bn2, nn.LeakyReLU(negative_slope=0.2))
+                                   self.bn2, 
+                                   nn.LeakyReLU(negative_slope=0.2))
         self.conv3 = nn.Sequential(nn.Conv2d(64*2, 128, kernel_size=1, bias=False),
-            self.bn3, nn.LeakyReLU(negative_slope=0.2))
+                                   self.bn3, 
+                                   nn.LeakyReLU(negative_slope=0.2))
         self.conv4 = nn.Sequential(nn.Conv2d(128*2, 256, kernel_size=1, bias=False),
-            self.bn4, nn.LeakyReLU(negative_slope=0.2))
-        self.conv5 = nn.Sequential(nn.Conv2d(512, args.emb_dims, kernel_size=1, bias=False),
-            self.bn5, nn.LeakyReLU(negative_slope=0.2))
+                                   self.bn4,
+                                   nn.LeakyReLU(negative_slope=0.2))
+        self.conv5 = nn.Sequential(nn.Conv1d(512, args.emb_dims, kernel_size=1, bias=False),
+                                   self.bn5, 
+                                   nn.LeakyReLU(negative_slope=0.2))
         self.conv6 = nn.Sequential(nn.Conv2d(64, 64, kernel_size=1, bias=False),
-            self.bn2, nn.LeakyReLU(negative_slope=0.2))
-        self.conv7 = nn.Sequential(nn.Conv2d(192, args.emb_dims, kernel_size=1, bias=False),
-            self.bn5, nn.LeakyReLU(negative_slope=0.2))
-        self.conv8 = nn.Sequential(nn.Conv2d(1216, 512, kernel_size=1, bias=False),
-            self.bn6, nn.LeakyReLU(negative_slope=0.2))
-        self.conv9 = nn.Sequential(nn.Conv2d(512, 256, kernel_size=1, bias=False),
-            self.bn7, nn.LeakyReLU(negative_slope=0.2)) 
+                                   self.bn2, 
+                                   nn.LeakyReLU(negative_slope=0.2))
+        self.conv7 = nn.Sequential(nn.Conv1d(192, args.emb_dims, kernel_size=1, bias=False),
+                                   self.bn5, 
+                                   nn.LeakyReLU(negative_slope=0.2))
+        self.conv8 = nn.Sequential(nn.Conv1d(1216, 512, kernel_size=1, bias=False),
+                                   self.bn6, 
+                                   nn.LeakyReLU(negative_slope=0.2))
+        self.conv9 = nn.Sequential(nn.Conv1d(512, 256, kernel_size=1, bias=False),
+                                   self.bn7, 
+                                   nn.LeakyReLU(negative_slope=0.2)) 
         self.conv10 = nn.Conv1d(256, 7, kernel_size=1, bias=False)
 
         self.linear1 = nn.Linear(args.emb_dims*2, 512, bias=False)
