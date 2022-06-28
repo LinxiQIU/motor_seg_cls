@@ -100,15 +100,15 @@ def train(args, io):
             data = data.permute(0, 2, 1)
             batch_size = data.size()[0]
             opt.zero_grad()
-            cls_pred, seg_pred = model(data.float())
-            loss_cls = criterion(cls_pred, types)
+            logits, seg_pred = model(data.float())
+            loss_cls = criterion(logits, types)
             seg_pred = seg_pred.permute(0, 2, 1).contiguous()
             batch_label = seg.view(-1, 1)[:, 0].cpu().data.numpy()
             loss_seg = criterion(seg_pred.view(-1, num_cls), seg.view(-1, 1).squeeze())
             loss = loss_cls + loss_seg
             loss.backward()
             opt.step()
-            preds = cls_pred.max(dim=1)[1]
+            preds = logits.max(dim=1)[1]
             count += batch_size
             train_loss += loss.item() * batch_size
             cls_true.append(types.cpu().numpy())
@@ -181,13 +181,13 @@ def train(args, io):
                 data = data.permute(0, 2, 1)
                 batch_size = data.size()[0]
                 opt.zero_grad()
-                cls_pred, seg_pred = model(data.float())
-                loss_cls = criterion(cls_pred, types)
+                logits, seg_pred = model(data.float())
+                loss_cls = criterion(logits, types)
                 seg_pred = seg_pred.permute(0, 2, 1).contiguous()
                 batch_label = seg.view(-1, 1)[:, 0].cpu().data.numpy()
                 loss_seg = criterion(seg_pred.view(-1, num_cls), seg.view(-1, 1).squeeze())
                 loss = loss_cls + loss_seg
-                preds = cls_pred.max(dim=1)[1]
+                preds = logits.max(dim=1)[1]
                 count += batch_size
                 val_loss += loss.item() * batch_size
                 val_true.append(types.cpu().numpy())
