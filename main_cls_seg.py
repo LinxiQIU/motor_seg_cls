@@ -135,7 +135,7 @@ def train(args, io):
         
         cls_true = np.concatenate(cls_true)
         cls_pred = np.concatenate(cls_pred)
-        outstr_cls = 'Train %d, loss: %.6f, train acc: %.6f, train avg acc: %.6f' % (epoch,
+        outstr_cls = 'Train %d, loss: %.6f, cls train acc: %.6f, cls train avg acc: %.6f' % (epoch,
                                                                                  train_loss*1.0/count,
                                                                                  metrics.accuracy_score(
                                                                                      cls_true, cls_pred),
@@ -146,7 +146,7 @@ def train(args, io):
         writer.add_scalar('Loss/train loss', train_loss*1.0/count, epoch)
         writer.add_scalar('Accuracy/train acc', metrics.accuracy_score(cls_true, cls_pred), epoch)
         writer.add_scalar('Average Accuracy/train avg acc', metrics.balanced_accuracy_score(cls_true, cls_pred), epoch)
-        outstr_sem_seg = 'Train %d, loss: %.6f, train acc: %.6f ' % (epoch, 
+        outstr_sem_seg = 'Train %d, seg loss: %.6f, seg train acc: %.6f ' % (epoch, 
                                                               loss_sum / num_batches,
                                                               total_correct / float(total_seen))
         io.cprint(outstr_sem_seg)
@@ -200,8 +200,8 @@ def train(args, io):
                 loss_sum += loss
                 for j in range(num_cls):
                     total_seen_class[j] += np.sum(batch_label == j)
-                    total_correct_class__[j] += np.sum((pred_choice == j) & (batch_label == j))
-                    total_iou_deno_class__[j] += np.sum((pred_choice == j) | (batch_label == j))
+                    total_correct_class[j] += np.sum((pred_choice == j) & (batch_label == j))
+                    total_iou_deno_class[j] += np.sum((pred_choice == j) | (batch_label == j))
                 
                 ####### calculate without Background ##############
                 for j in range(1, num_cls):
