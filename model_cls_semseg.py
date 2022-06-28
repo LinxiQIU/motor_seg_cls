@@ -147,7 +147,7 @@ class DGCNN_cls_semseg(nn.Module):
         xs1 = torch.cat((x1, x2, x3, x4), dim=1)
         ys1 = torch.cat((y1, y2, y3), dim=1)
         y = self.conv7(ys1)
-        y4 = y.max(dim=-1, keepdim=False)[0]
+        y4 = y.max(dim=-1, keepdim=True)[0]
         y4 = y4.repeat(1, 1, num_points)
         ys2 = torch.cat((y4, y1, y2, y3), dim=1)
 
