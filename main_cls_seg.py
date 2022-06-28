@@ -111,7 +111,7 @@ def train(args, io):
             preds = cls_pred.max(dim=1)[1]
             count += batch_size
             train_loss += loss.item() * batch_size
-            cls_true.append(types.cup().numpy())
+            cls_true.append(types.cpu().numpy())
             cls_pred.append(preds.detach().cpu().numpy())
             seg_pred = seg_pred.contiguous().view(-1, num_cls)
             pred_choice = seg_pred.cpu().data.max(1)[1].numpy()
@@ -190,7 +190,7 @@ def train(args, io):
                 preds = cls_pred.max(dim=1)[1]
                 count += batch_size
                 val_loss += loss.item() * batch_size
-                val_true.append(types.cup().numpy())
+                val_true.append(types.cpu().numpy())
                 val_pred.append(preds.detach().cpu().numpy())
                 seg_pred = seg_pred.contiguous().view(-1, num_cls)
                 pred_choice = seg_pred.cpu().data.max(1)[1].numpy()
