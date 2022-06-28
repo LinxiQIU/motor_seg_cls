@@ -5,7 +5,7 @@ Created on Sat Jun 17 13:43:22 2022
 
 @author: linxi
 """
-import os
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -108,7 +108,7 @@ class DGCNN_cls_semseg(nn.Module):
     def forward(self, x):
         batch_size = x.size(0)
         num_points = x.size(2)
-        x = x.float(x)
+        x = x.float()
 
         x = get_neighbors(x, k=self.k)
         x1 = self.conv1(x)
