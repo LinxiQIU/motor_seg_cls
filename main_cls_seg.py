@@ -32,8 +32,8 @@ def _init_():
         os.makedirs('outputs')
     if not os.path.exists('outputs/' + args.model + '/' + args.exp_name):
         os.makedirs('outputs/' + args.model + '/' + args.exp_name)
-    if not os.path.exists('outputs/' + args.model + '/' + args.exp_name + '/' + args.change + '/model'):
-        os.makedirs('outputs/' + args.model + '/' + args.exp_name + '/' + args.change + '/model')
+    if not os.path.exists('outputs/' + args.model + '/' + args.exp_name + '/' + args.change + '/models'):
+        os.makedirs('outputs/' + args.model + '/' + args.exp_name + '/' + args.change + '/models')
 
 
 def train(args, io):
@@ -143,7 +143,7 @@ def train(args, io):
                                                                                      cls_true, cls_pred))
         io.cprint(outstr_cls)
         writer.add_scalar('learning rate/lr', opt.param_groups[0]['lr'], epoch)
-        writer.add_scalar('Loss/train loss', train_loss*1.0/count, epoch)
+        # writer.add_scalar('Loss/train loss', train_loss*1.0/count, epoch)
         writer.add_scalar('Accuracy/train acc', metrics.accuracy_score(cls_true, cls_pred), epoch)
         writer.add_scalar('Average Accuracy/train avg acc', metrics.balanced_accuracy_score(cls_true, cls_pred), epoch)
         outstr_sem_seg = 'Train %d, seg loss: %.6f, seg train acc: %.6f ' % (epoch, 
@@ -208,6 +208,7 @@ def train(args, io):
                     noBG_seen_class[j-1] += np.sum(batch_label == j)
                     noBG_correct_class[j-1] += np.sum((pred_choice == j) & (batch_label == j))
                     noBG_iou_deno_class[j-1] += np.sum((pred_choice == j) | (batch_label == j))
+            
             mIoU = np.mean(np.array(total_correct_class) / (np.array(total_iou_deno_class, dtype=np.float64) + 1e-6))
             
             val_true = np.concatenate(val_true)
@@ -224,7 +225,7 @@ def train(args, io):
             writer.add_scalar('Average Accuracy/val avg acc', avg_per_class_acc, epoch)
             if val_acc >= best_val_acc:
                 best_val_acc = val_acc
-                torch.save(model.state_dict(), 'outputs/%s/%s/%s/best_cls_model.t7' % (args.model, args.exp_name, args.change))
+                torch.save(model.state_dict(), 'outputs/%s/%s/%s/models/best_cls_model.t7' % (args.model, args.exp_name, args.change))
             
             outstr = 'Validation with backgroud----epoch: %d,  eval mean loss %.6f,  eval mIoU %.6f,  eval point acc %.6f, eval point avg class IoU %.6f' % (epoch, loss_sum / num_batches, mIoU,
                                                         total_correct / float(total_seen), np.mean(np.array(total_correct_class) / (np.array(total_seen_class, dtype=np.float64) + 1e-6)))     
@@ -235,10 +236,10 @@ def train(args, io):
             io.cprint(outstr_without_background)
             
             iou_per_class_str = '------- IoU --------\n'
-            for l in range(num_cls):
-                iou_per_class_str += 'class %s, IoU: %.3f \n' % (
-                    labels2categories[l] + ' ' * (14 - len(labels2categories[l])),
-                    total_correct_class[l] / float(total_iou_deno_class[l]))
+            for i in range(num_cls):
+                iou_per_class_str += 'class %s IoU: %.3f \n' % (
+                    labels2categories[i] + ' ' * (20 - len(labels2categories[i])),
+                    total_correct_class[i] / float(total_iou_deno_class[i]))
             io.cprint(iou_per_class_str)
             
             if mIoU >= best_iou:
@@ -274,12 +275,6 @@ def train(args, io):
     io.close()
             
         
-        
-    
-    
-
-
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Point Cloud Classification')
