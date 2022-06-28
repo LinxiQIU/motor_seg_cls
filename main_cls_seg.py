@@ -16,7 +16,7 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 from data_cls_seg import MotorDataset
-from model_cls_seg import DGCNN_cls_semseg
+from model_cls_semseg import DGCNN_cls_semseg
 from util import cal_loss, IOStream
 import sklearn.metrics as metrics
 from torch.utils.tensorboard import SummaryWriter
