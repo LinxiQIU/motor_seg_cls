@@ -120,7 +120,7 @@ def train(args, io):
             total_seen += (batch_size * args.num_points)
             loss_sum += loss
             for j in range(num_cls):
-                total_correct_class__[j] += np.sum(pred_choice == j) & (batch_label == j)
+                total_correct_class__[j] += np.sum((pred_choice == j) & (batch_label == j))
                 total_iou_deno_class__[j] += np.sum((pred_choice == j) | (batch_label == j))
         mIoU__ = np.mean(np.array(total_correct_class__) / (np.array(total_iou_deno_class__, dtype=np.float64) + 1e-6))
         
@@ -200,7 +200,7 @@ def train(args, io):
                 loss_sum += loss
                 for j in range(num_cls):
                     total_seen_class[j] += np.sum(batch_label == j)
-                    total_correct_class__[j] += np.sum(pred_choice == j) & (batch_label == j)
+                    total_correct_class__[j] += np.sum((pred_choice == j) & (batch_label == j))
                     total_iou_deno_class__[j] += np.sum((pred_choice == j) | (batch_label == j))
                 
                 ####### calculate without Background ##############
