@@ -10,6 +10,7 @@ import argparse
 import torch
 import torch.nn as nn
 # import torch.nn.functional as F
+import time
 import torch.optim as optim
 import numpy as np
 from tqdm import tqdm
@@ -40,7 +41,8 @@ def train(args, io):
     train_loader = DataLoader(MotorDataset(root=args.root, split='train', 
                                            num_points=args.num_points, 
                                            test_area=args.validation_symbol),
-                              num_workers=8, batch_size=args.batch_size, shuffle=True, drop_last=True)
+                              num_workers=8, batch_size=args.batch_size, shuffle=True, drop_last=True,
+                              worker_init_fn=lambda x: np.random.seed(x + int(time.time())))
     test_loader = DataLoader(MotorDataset(root=args.root, split='test', 
                                           num_points=args.num_points,
                                           test_area=args.validation_symbol),
