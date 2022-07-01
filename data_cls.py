@@ -64,12 +64,10 @@ class MotorDataset(Dataset):
 
 class MotorData(Dataset):
     def __init__(self, root, split='train', num_points=2048, test_area='Validation',
-                  block_size=1.0, sample_rate=1.0, transform=None):
+                 sample_rate=1.0):
         super().__init__()
         self.root = root
         self.num_points = num_points
-        self.block_size = block_size
-        self.transform = transform
         motor_ls = sorted(os.listdir(root))
         if split == 'train':
             motor_ids = [motor for motor in motor_ls if '{}'.format(test_area) not in motor]
@@ -77,40 +75,39 @@ class MotorData(Dataset):
             motor_ids = [motor for motor in motor_ls if '{}'.format(test_area) in motor]
         
         self.motor_cat = set([motor.split('_')[1] for motor in motor_ls])
-        self.classes = dict(zip(self.motor_cat, range(len(self.motor_cat))))
-        
-        # type_names = [x.split('_')[1] for x in motor_ids]
+        self.classes = dict(zip(self.motor_cat, range(len(self.motor_cat))))        
         self.all_points = [] 
         self.all_types = [] 
-        num_points_eachmotor= []
+        num_points_all= []
         label_num_eachtype = np.zeros(7)
-        for i in tqdm(motor_ids, total=len(motor_ids)):
-            motor_type = self.classes[i.split('_')[1]]
+        for ids in tqdm(motor_ids, total=len(motor_ids)):
+            motor_type = self.classes[ids.split('_')[1]]
             motor_type = np.array([motor_type]).astype(np.int64)
-            motor_data = np.load(os.path.join(root, i))
-            point_set = motor_data[:, 0:3]
-            motor_labels = motor_data[:, 6]
-            num_eachtype_in_onemotor,_ = np.histogram(motor_labels, range(8))
-            label_num_eachtype += num_eachtype_in_onemotor
+            motor_data = np.load(os.path.join(root, ids))     # xyzrgbl, N*7
+            point_set = motor_data[:, 0:3]     # xyz
+            motor_labels = motor_data[:, 6]       # label
+            tmp, _ = np.histogram(motor_labels, range(8))
+            label_num_eachtype += tmp
             self.all_points.append(point_set)
             self.all_types.append(motor_type)
-            num_points_eachmotor.append(motor_labels.size)
+            num_points_all.append(motor_labels.size)
             
-        sample_prob_eachmotor = num_points_eachmotor / np.sum(num_points_eachmotor)
-        num_interaction = sample_rate * np.sum(num_points_eachmotor) / self.num_points
-        self.motors_index = []
-        for index in range(len(num_points_eachmotor)):
-            sample_times_in_onemotor = int(round(sample_prob_eachmotor[index] * num_interaction))
-            motor_index_onemotor = [index] * sample_times_in_onemotor
-            self.motors_index.extend(motor_index_onemotor)
+        sample_prob = num_points_all / np.sum(num_points_all)
+        print(sample_prob)
+        num_inter = sample_rate * np.sum(num_points_all) / self.num_points
+        self.motors_idxs = []
+        for idx in range(len(num_points_all)):
+            sample_times_in_onemotor = int(round(sample_prob[idx] * num_inter))
+            motor_index_onemotor = [idx] * sample_times_in_onemotor
+            self.motors_idxs.extend(motor_index_onemotor)
     
     def __len__(self):
-        return len(self.motors_index)
+        return len(self.motors_idxs)
     
     def __getitem__(self, index):
-        point_set = self.all_points[self.motors_index[index]]
+        point_set = self.all_points[self.motors_idxs[index]]
         # labels = self.all_labels[self.motors_index[index]]
-        types = self.all_types[self.motors_index[index]]
+        types = self.all_types[self.motors_idxs[index]]
         n_points = point_set.shape[0]
         choose = np.random.choice(n_points, self.num_points, replace=True)
         chosed_points = point_set[choose, :]
@@ -122,13 +119,13 @@ class MotorData(Dataset):
 
 if __name__ == '__main__':
     import torch
-    data = MotorData('E:\\dataset', split='train', test_area='Validation')
+    data = MotorData(root='E:\\dataset', split='train', test_area='Validation')
     Dataloader = torch.utils.data.DataLoader(data, batch_size=16, shuffle=True)
     for point, label in Dataloader:
         # print(point.size(0))
         # print(point.size(2))
         print(point.shape)
-        print(label)
+        print(label.shape)
         
         
         

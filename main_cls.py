@@ -10,12 +10,11 @@ import os
 import argparse
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
-from data_cls import MotorDataset
+from data_cls import MotorDataset, MotorData
 from model_cls import DGCNN_cls, PCT_cls
 from util import cal_loss, IOStream
 import sklearn.metrics as metrics
@@ -33,11 +32,11 @@ def _init_():
 
 
 def train(args, io):
-    train_loader = DataLoader(MotorDataset(root=args.root, split='train', 
+    train_loader = DataLoader(MotorData(root=args.root, split='train', 
                                            num_points=args.num_points, 
                                            test_area=args.validation_symbol),
                               num_workers=8, batch_size=args.batch_size, shuffle=True, drop_last=True)
-    test_loader = DataLoader(MotorDataset(root=args.root, split='test', 
+    test_loader = DataLoader(MotorData(root=args.root, split='test', 
                                           num_points=args.num_points,
                                           test_area=args.validation_symbol),
                              num_workers=8, batch_size=args.batch_size, shuffle=True, drop_last=False)
