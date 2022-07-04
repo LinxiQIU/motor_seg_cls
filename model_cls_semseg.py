@@ -66,7 +66,7 @@ def get_neighbors(x, k=20):
 
 
 class DGCNN_cls_semseg(nn.Module):
-    def __init__(self, args, output_types=5):
+    def __init__(self, args):
         super(DGCNN_cls_semseg, self).__init__()
         self.args = args
         self.k = args.k
@@ -112,7 +112,7 @@ class DGCNN_cls_semseg(nn.Module):
         self.dp1 = nn.Dropout(p=args.dropout)
         self.linear2 = nn.Linear(512, 256)
         self.dp2 = nn.Dropout(p=args.dropout)
-        self.linear3 = nn.Linear(256, output_types)
+        self.linear3 = nn.Linear(256, 5)
 
     def forward(self, x):
         batch_size = x.size(0)
@@ -166,9 +166,10 @@ class DGCNN_cls_semseg(nn.Module):
         y = self.dp1(y)
         y = self.conv10(y)
 
-        return x, y   #### x is for classification and y is for semantic segmentation
+        return x, y   #### x is for classification, y is for semantic segmentation
     
 if __name__ == '__main__':
     model = DGCNN_cls_semseg()
-    print(str(model))
+    xyz = torch.rand(16, 3, 2048)
+    model(xyz)
 

@@ -16,7 +16,7 @@ import numpy as np
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
-from data_cls_seg import MotorDataset
+from data_cls import MotorDataset
 from model_cls_semseg import DGCNN_cls_semseg
 from util import cal_loss, IOStream
 import sklearn.metrics as metrics
@@ -194,41 +194,43 @@ def train(args, io):
                 val_loss += loss.item() * batch_size
                 val_true.append(types.cpu().numpy())
                 val_pred.append(preds.detach().cpu().numpy())
-                seg_pred = seg_pred.contiguous().view(-1, num_cls)
-                pred_choice = seg_pred.cpu().data.max(1)[1].numpy()
+                seg_pred = seg_pred.contiguous().view(-1, num_cls)  # (batch_size*num_point, num_class)
+                pred_choice = seg_pred.cpu().data.max(1)[1].numpy()   # array(batch_size*num_point)
                 correct = np.sum(pred_choice == batch_label)
                 total_correct += correct
                 total_seen += (batch_size * args.num_points)
                 loss_sum += loss
-                for j in range(num_cls):
-                    total_seen_class[j] += np.sum(batch_label == j)
-                    total_correct_class[j] += np.sum((pred_choice == j) & (batch_label == j))
-                    total_iou_deno_class[j] += np.sum((pred_choice == j) | (batch_label == j))
+                for l in range(num_cls):
+                    total_seen_class[l] += np.sum(batch_label == l)
+                    total_correct_class[l] += np.sum((pred_choice == l) & (batch_label == l))     ### Intersection
+                    total_iou_deno_class[l] += np.sum((pred_choice == l) | (batch_label == l))   ### Union
                 
                 ####### calculate without Background ##############
-                for j in range(1, num_cls):
-                    noBG_seen_class[j-1] += np.sum(batch_label == j)
-                    noBG_correct_class[j-1] += np.sum((pred_choice == j) & (batch_label == j))
-                    noBG_iou_deno_class[j-1] += np.sum((pred_choice == j) | (batch_label == j))
+                for l in range(1, num_cls):
+                    noBG_seen_class[l-1] += np.sum(batch_label == l)
+                    noBG_correct_class[l-1] += np.sum((pred_choice == l) & (batch_label == l))     ### Intersection
+                    noBG_iou_deno_class[l-1] += np.sum((pred_choice == l) | (batch_label == l))     ### Union
             
             mIoU = np.mean(np.array(total_correct_class) / (np.array(total_iou_deno_class, dtype=np.float64) + 1e-6))
             
+            ###### Classification Results (Validation) #######
             val_true = np.concatenate(val_true)
             val_pred = np.concatenate(val_pred)
             val_acc = metrics.accuracy_score(val_true, val_pred)
             avg_per_class_acc = metrics.balanced_accuracy_score(val_true, val_pred)
-            outstr_cls_val = 'Test %d, loss: %.6f, test acc: %.6f, test avg acc: %.6f' % (epoch,
+            outstr_cls_val = 'Test %d, loss: %.6f, test cls acc: %.6f, test avg cls acc: %.6f' % (epoch,
                                                                                   val_loss*1.0/count,
                                                                                   val_acc,
                                                                                   avg_per_class_acc)
             io.cprint(outstr_cls_val)
             writer.add_scalar('Loss/val loss', val_loss*1.0/count, epoch)
-            writer.add_scalar('Accuracy/val acc', val_acc, epoch)
-            writer.add_scalar('Average Accuracy/val avg acc', avg_per_class_acc, epoch)
+            writer.add_scalar('Accuracy/val cls acc', val_acc, epoch)
+            writer.add_scalar('Average Accuracy/val avg cls acc', avg_per_class_acc, epoch)
             if val_acc >= best_val_acc:
                 best_val_acc = val_acc
                 torch.save(model.state_dict(), 'outputs/%s/%s/%s/models/best_cls_model.t7' % (args.model, args.exp_name, args.change))
             
+            ###### Segmentation Results (Validation) ######
             outstr = 'Validation with backgroud----epoch: %d,  eval mean loss %.6f,  eval mIoU %.6f,  eval point acc %.6f, eval point avg class IoU %.6f' % (epoch, loss_sum / num_batches, mIoU,
                                                         total_correct / float(total_seen), np.mean(np.array(total_correct_class) / (np.array(total_seen_class, dtype=np.float64) + 1e-6)))     
             io.cprint(outstr)
@@ -268,7 +270,7 @@ def train(args, io):
             io.cprint('Best IoU of bolts: %f' % best_bolts_iou)
             io.cprint('\n\n')
         # writer.add_scalar('learning rate', opt.param_groups[0]['lr'], epoch)
-        writer.add_scalar('Loss/Validation mean loss', loss_sum / num_batches, epoch)
+        # writer.add_scalar('Loss/Validation mean loss', loss_sum / num_batches, epoch)
         writer.add_scalar('Accuracy/Validation accuracy', total_correct / float(total_seen), epoch)
         writer.add_scalar('mIoU/Validation mean MoU', mIoU, epoch)
         writer.add_scalar('IoU of bolt/Validation', (total_correct_class[5] + total_correct_class[6]) / (float(total_iou_deno_class[5]) + float(total_iou_deno_class[6])), epoch)
