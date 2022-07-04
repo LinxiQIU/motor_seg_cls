@@ -107,7 +107,7 @@ def train(args, io):
             seg_pred = seg_pred.permute(0, 2, 1).contiguous()
             batch_label = seg.view(-1, 1)[:, 0].cpu().data.numpy()
             loss_seg = criterion(seg_pred.view(-1, num_cls), seg.view(-1, 1).squeeze())
-            loss = loss_cls + loss_seg
+            loss = 0.5*loss_cls + loss_seg
             loss.backward()
             opt.step()
             preds = logits.max(dim=1)[1]
@@ -121,9 +121,9 @@ def train(args, io):
             total_correct += correct
             total_seen += (batch_size * args.num_points)
             loss_sum += loss
-            for j in range(num_cls):
-                total_correct_class__[j] += np.sum((pred_choice == j) & (batch_label == j))
-                total_iou_deno_class__[j] += np.sum((pred_choice == j) | (batch_label == j))
+            for l in range(num_cls):
+                total_correct_class__[l] += np.sum((pred_choice == l) & (batch_label == l))    # Intersection
+                total_iou_deno_class__[l] += np.sum((pred_choice == l) | (batch_label == l))   # Union
         mIoU__ = np.mean(np.array(total_correct_class__) / (np.array(total_iou_deno_class__, dtype=np.float64) + 1e-6))
         
         if args.scheduler == 'cos':
@@ -182,7 +182,6 @@ def train(args, io):
                 data, seg, types = data.to(device), seg.to(device), types.to(device).squeeze()
                 data = data.permute(0, 2, 1)
                 batch_size = data.size()[0]
-                opt.zero_grad()
                 logits, seg_pred = model(data.float())
                 loss_cls = criterion(logits, types)
                 seg_pred = seg_pred.permute(0, 2, 1).contiguous()
@@ -194,6 +193,7 @@ def train(args, io):
                 val_loss += loss.item() * batch_size
                 val_true.append(types.cpu().numpy())
                 val_pred.append(preds.detach().cpu().numpy())
+                ### segmentation
                 seg_pred = seg_pred.contiguous().view(-1, num_cls)  # (batch_size*num_point, num_class)
                 pred_choice = seg_pred.cpu().data.max(1)[1].numpy()   # array(batch_size*num_point)
                 correct = np.sum(pred_choice == batch_label)
