@@ -228,7 +228,7 @@ class PCT_cls(nn.Module):
         x3 = self.sa3(x2)
         x4 = self.sa4(x3)
         
-        x = concat((x1, x2, x3, x4), dim=1)
+        x = torch.cat((x1, x2, x3, x4), dim=1)
 
         x = self.conv_fuse(x)
         # x = F.adaptive_max_pool1d(x, 1).view(batch_size, -1)

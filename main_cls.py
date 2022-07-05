@@ -15,7 +15,7 @@ import numpy as np
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 from data_cls import MotorDataset, MotorData
-from model_cls_semseg import DGCNN_cls_semseg
+from model_cls import DGCNN_cls
 from util import cal_loss, IOStream
 import sklearn.metrics as metrics
 from torch.utils.tensorboard import SummaryWriter
@@ -43,7 +43,7 @@ def train(args, io):
     device = torch.device('cuda' if args.cuda else 'cpu')
     
     if args.model == 'dgcnn':
-        model = DGCNN_cls_semseg(args).to(device)
+        model = DGCNN_cls(args).to(device)
     # elif args.model == 'pct':
     #     model = PCT_cls(args).to(device)
     else:
