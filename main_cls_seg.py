@@ -145,14 +145,14 @@ def train(args, io):
         io.cprint(outstr_cls)
         writer.add_scalar('learning rate/lr', opt.param_groups[0]['lr'], epoch)
         # writer.add_scalar('Loss/train loss', train_loss*1.0/count, epoch)
-        writer.add_scalar('Accuracy/train acc', metrics.accuracy_score(cls_true, cls_pred), epoch)
+        writer.add_scalar('Accuracy/train cls acc', metrics.accuracy_score(cls_true, cls_pred), epoch)
         writer.add_scalar('Average Accuracy/train avg acc', metrics.balanced_accuracy_score(cls_true, cls_pred), epoch)
         outstr_sem_seg = 'Train %d, seg loss: %.6f, seg train acc: %.6f ' % (epoch, 
                                                               loss_sum / num_batches,
                                                               total_correct / float(total_seen))
         io.cprint(outstr_sem_seg)
         writer.add_scalar('Loss/Train mean Loss', loss_sum / num_batches, epoch)
-        writer.add_scalar('Accuracy/Train accuracy', (total_correct / float(total_seen)), epoch)
+        writer.add_scalar('Accuracy/Train seg accuracy', (total_correct / float(total_seen)), epoch)
         writer.add_scalar('mIoU/Train mean IoU', mIoU__, epoch)
         writer.add_scalar('IoU of cover_bolt/train', total_correct_class__[6]/float(total_iou_deno_class__[6]), epoch)
         writer.add_scalar('IoU of bolt/train', (total_correct_class__[6] + total_correct_class__[5]) / (float(total_iou_deno_class__[6]) + float(total_iou_deno_class__[5])), epoch)

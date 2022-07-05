@@ -32,11 +32,11 @@ def _init_():
 
 
 def train(args, io):
-    train_loader = DataLoader(MotorData(root=args.root, split='train', 
+    train_loader = DataLoader(MotorDataset(root=args.root, split='train', 
                                            num_points=args.num_points, 
                                            test_area=args.validation_symbol),
                               num_workers=8, batch_size=args.batch_size, shuffle=True, drop_last=True)
-    test_loader = DataLoader(MotorData(root=args.root, split='test', 
+    test_loader = DataLoader(MotorDataset(root=args.root, split='test', 
                                           num_points=args.num_points,
                                           test_area=args.validation_symbol),
                              num_workers=8, batch_size=args.batch_size, shuffle=True, drop_last=False)
