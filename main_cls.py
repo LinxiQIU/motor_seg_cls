@@ -85,7 +85,7 @@ def train(args, io):
             data = data.permute(0, 2, 1)
             batch_size = data.size()[0]
             opt.zero_grad()
-            logits, pred_seg = model(data.float())
+            logits = model(data.float())
             loss = criterion(logits, label)
             loss.backward()
             opt.step()
@@ -129,7 +129,7 @@ def train(args, io):
             data, label = data.to(device), label.to(device).squeeze()
             data = data.permute(0, 2, 1)
             batch_size = data.size()[0]
-            logits, pred_seg = model(data.float())
+            logits = model(data.float())
             loss = criterion(logits, label)
             preds = logits.max(dim=1)[1]
             count += batch_size
