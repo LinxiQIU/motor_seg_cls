@@ -20,8 +20,7 @@ def pc_normalize(pc):
 
 
 class MotorDataset(Dataset):
-    def __init__(self, root, split='train', num_points=2048, test_area=None,
-                 transform=None):
+    def __init__(self, root, split='train', num_points=2048, test_area=None, transform=None):
         super().__init__()
         self.root = root
         self.num_points = num_points
@@ -39,32 +38,27 @@ class MotorDataset(Dataset):
         print('The size of %s data is %d' % (split, len(self.datapath)))
         self.all_points = [None] * len(self.datapath)
         self.all_cls = [None] * len(self.datapath)
-        self.all_labels = [None] * len(self.datapath)
         for index in tqdm(range(len(self.datapath)), total=len(self.datapath)):
             fn = self.datapath[index]
             motor_type = self.classes[self.datapath[index][0]]
             motor_type = np.array([motor_type]).astype(np.int64)
             motor_data = np.load(fn[1])
             point_set = motor_data[:, 0:3]
-            labels = motor_data[:, 6]
             # point_set = pc_normalize(point_set)
             self.all_points[index] = point_set
             self.all_cls[index] = motor_type
-            self.all_labels[index] = labels
-    
+
     def __len__(self):
         return len(self.datapath)
     
     def __getitem__(self, index):
         point_set = self.all_points[index]
-        labels = self.all_labels[index]
         types = self.all_cls[index]
         n_points = point_set.shape[0]
         choice = np.random.choice(n_points, self.num_points, replace=True)
         point_set = point_set[choice, :]
         point_set = pc_normalize(point_set)
-        label = labels[choice]
-        return point_set, label, types
+        return point_set, types
 
 
 class MotorData(Dataset):

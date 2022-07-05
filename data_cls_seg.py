@@ -20,6 +20,16 @@ def pc_normalize(pc):
     return pc
 
 
+def get_object_id(x) :    #get all kinds of ObjectID from numpy file
+
+    dic = []
+    for i in range(x.shape[0]):
+        if x[i][6] not in dic:
+            dic.append(x[i][6])
+
+    return dic
+
+
 class MotorDataset(Dataset):
     def __init__(self, root, split='train', num_points=2048, test_area='Validation',
                   block_size=1.0, sample_rate=1.0, transform=None):
@@ -44,20 +54,20 @@ class MotorDataset(Dataset):
         num_points_eachmotor= []
         label_num_eachtype = np.zeros(7)
         for i in tqdm(motor_ids, total=len(motor_ids)):
-            # type_names = [.split('_')[1] for x in motor_ids]
+
             motor_type = self.classes[i.split('_')[1]]
             motor_type = np.array([motor_type]).astype(np.int64)
-            # motor_type = np.array([motor_type]).astype(np.int64)
             motor_data = np.load(os.path.join(root, i))
             point_set = motor_data[:, 0:3]
             motor_labels = motor_data[:, 6]
-            num_eachtype_in_onemotor,_ = np.histogram(motor_labels, range(8))
+            num_eachtype_in_onemotor,_ = np.histogram(motor_labels, bins=7, range=(0,7))
             label_num_eachtype += num_eachtype_in_onemotor
-            # point_set = pc_normalize(point_set)
+
             self.all_points.append(point_set)
             self.all_types.append(motor_type)
             self.all_labels.append(motor_labels)
             num_points_eachmotor.append(motor_labels.size)
+            
     #############caculate the index for choose of points from the motor according to the number of points of a specific motor######### 
         sample_prob_eachmotor = num_points_eachmotor / np.sum(num_points_eachmotor)
         num_interaction = sample_rate * np.sum(num_points_eachmotor) / self.num_points
@@ -80,6 +90,9 @@ class MotorDataset(Dataset):
         chosed_labels = labels[choose]        
         chosed_points = pc_normalize(chosed_points)
         return chosed_points, chosed_labels, types
+
+
+
 
 if __name__ == '__main__':
     import torch
