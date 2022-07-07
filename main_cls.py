@@ -15,7 +15,7 @@ import numpy as np
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 from data_cls import MotorDataset, MotorData
-from model_cls import DGCNN_cls
+from model_cls_seg import DGCNN_cls_semseg
 from util import cal_loss, IOStream
 import sklearn.metrics as metrics
 from torch.utils.tensorboard import SummaryWriter
@@ -43,7 +43,7 @@ def train(args, io):
     device = torch.device('cuda' if args.cuda else 'cpu')
     
     if args.model == 'dgcnn':
-        model = DGCNN_cls(args).to(device)
+        model = DGCNN_cls_semseg(args).to(device)
     # elif args.model == 'pct':
     #     model = PCT_cls(args).to(device)
     else:
@@ -85,7 +85,7 @@ def train(args, io):
             data = data.permute(0, 2, 1)
             batch_size = data.size()[0]
             opt.zero_grad()
-            logits = model(data.float())
+            pred_seg, logits = model(data.float())
             loss = criterion(logits, label)
             loss.backward()
             opt.step()
@@ -129,7 +129,7 @@ def train(args, io):
             data, label = data.to(device), label.to(device).squeeze()
             data = data.permute(0, 2, 1)
             batch_size = data.size()[0]
-            logits = model(data.float())
+            pred_seg, logits = model(data.float())
             loss = criterion(logits, label)
             preds = logits.max(dim=1)[1]
             count += batch_size

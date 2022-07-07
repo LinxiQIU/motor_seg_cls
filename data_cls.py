@@ -121,11 +121,8 @@ if __name__ == '__main__':
     import torch
     data = MotorDataset(root='E:\\dataset', split='test', test_area='Validation')
     Dataloader = torch.utils.data.DataLoader(data, batch_size=16, shuffle=False)
-    for points, labels, types in Dataloader:
-        # print(point.size(0))
-        # print(point.size(2))
+    for points, types in Dataloader:
         print(points.shape)
-        print(labels.shape)
         print(types.shape)
         
         

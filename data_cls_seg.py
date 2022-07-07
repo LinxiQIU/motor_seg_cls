@@ -99,6 +99,6 @@ if __name__ == '__main__':
     data = MotorDataset('E:\\dataset', split='train', test_area='Validation')
     Dataloader = torch.utils.data.DataLoader(data, batch_size=16, shuffle=True)
     for point, label, types in Dataloader:
-        # print(point.size())
+        print(point.size())
         # print(label.size())
-        print(types.size())
+        # print(types.size())

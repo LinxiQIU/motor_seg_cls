@@ -125,6 +125,7 @@ class DGCNN_cls(nn.Module):
        
     def forward(self, x):
         batch_size = x.size(0)
+        
         x = get_neighbors(x, k=self.k)      # (batch_size, 6, num_points) -> (batch_size, 6*2, num_points, k)
         x = self.conv1(x)                       # (batch_size, 6*2, num_points, k) -> (batch_size, 64, num_points, k)
         x1 = x.max(dim=-1, keepdim=False)[0]    # (batch_size, 64, num_points, k) -> (batch_size, 64, num_points)
