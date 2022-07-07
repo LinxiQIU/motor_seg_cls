@@ -76,8 +76,8 @@ class DGCNN_cls_semseg(nn.Module):
         self.bn4 = nn.BatchNorm2d(64)
         self.bn5 = nn.BatchNorm2d(64)
         self.bn6 = nn.BatchNorm1d(args.emb_dims)
-        self.bn7 = nn.BatchNorm2d(512)
-        self.bn8 = nn.BatchNorm2d(256)
+        self.bn7 = nn.BatchNorm1d(512)
+        self.bn8 = nn.BatchNorm1d(256)
         
         self.conv1 = nn.Sequential(nn.Conv2d(6, 64, kernel_size=1, bias=False),     #6*64=384
                                    self.bn1,            #2*64*2=256
@@ -136,7 +136,6 @@ class DGCNN_cls_semseg(nn.Module):
         x = torch.cat((x1, x2, x3), dim=1)     # (batch_size, 64+64+64=192, num_points)
         x4 = self.conv6(x)                    # (batch_size, 192, num_points) -> (batch_size, emb_dims, num_points)
         x = x4.max(dim=-1, keepdim=True)[0]
-
         x = x.repeat(1, 1, num_points)
         x = torch.cat((x, x1, x2, x3), dim=1)   # (batch_size, 64+64+64+emb_dims(1024)=1216, num_points)
 
