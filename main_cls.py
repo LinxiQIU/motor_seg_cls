@@ -43,7 +43,7 @@ def train(args, io):
     device = torch.device('cuda' if args.cuda else 'cpu')
     
     if args.model == 'dgcnn':
-        model = DGCNN_cls_semseg(args).to(device)
+        model = DGCNN_cls(args).to(device)
     # elif args.model == 'pct':
     #     model = PCT_cls(args).to(device)
     else:
