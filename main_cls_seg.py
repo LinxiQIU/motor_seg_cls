@@ -15,8 +15,8 @@ import numpy as np
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
-from data_cls import MotorDataset
-from model_cls_semseg import DGCNN_cls_semseg
+from data_cls_seg import MotorDataset
+from model_cls_seg import DGCNN_cls_semseg
 from util import cal_loss, IOStream
 import sklearn.metrics as metrics
 from torch.utils.tensorboard import SummaryWriter
@@ -101,7 +101,7 @@ def train(args, io):
             data = data.permute(0, 2, 1)
             batch_size = data.size()[0]
             opt.zero_grad()
-            logits, seg_pred = model(data.float())
+            seg_pred, logits = model(data.float())
             loss_cls = criterion(logits, types)
             seg_pred = seg_pred.permute(0, 2, 1).contiguous()
             batch_label = seg.view(-1, 1)[:, 0].cpu().data.numpy()
@@ -181,7 +181,7 @@ def train(args, io):
                 data, seg, types = data.to(device), seg.to(device), types.to(device).squeeze()
                 data = data.permute(0, 2, 1)
                 batch_size = data.size()[0]
-                logits, seg_pred = model(data.float())
+                seg_pred, logits = model(data.float())
                 loss_cls = criterion(logits, types)
                 seg_pred = seg_pred.permute(0, 2, 1).contiguous()
                 batch_label = seg.view(-1, 1)[:, 0].cpu().data.numpy()

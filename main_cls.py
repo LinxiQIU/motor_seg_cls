@@ -15,7 +15,7 @@ import numpy as np
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 from data_cls import MotorDataset, MotorData
-from model_cls_seg import DGCNN_cls_semseg
+from model_cls import DGCNN_cls
 from util import cal_loss, IOStream
 import sklearn.metrics as metrics
 from torch.utils.tensorboard import SummaryWriter
@@ -32,11 +32,11 @@ def _init_():
 
 
 def train(args, io):
-    train_loader = DataLoader(MotorData(root=args.root, split='train', 
+    train_loader = DataLoader(MotorDataset(root=args.root, split='train', 
                                            num_points=args.num_points, 
                                            test_area=args.validation_symbol),
                               num_workers=8, batch_size=args.batch_size, shuffle=True, drop_last=True)
-    test_loader = DataLoader(MotorData(root=args.root, split='test', 
+    test_loader = DataLoader(MotorDataset(root=args.root, split='test', 
                                           num_points=args.num_points,
                                           test_area=args.validation_symbol),
                              num_workers=8, batch_size=args.batch_size, shuffle=True, drop_last=False)
@@ -85,7 +85,7 @@ def train(args, io):
             data = data.permute(0, 2, 1)
             batch_size = data.size()[0]
             opt.zero_grad()
-            pred_seg, logits = model(data.float())
+            logits = model(data.float())
             loss = criterion(logits, label)
             loss.backward()
             opt.step()
@@ -129,7 +129,7 @@ def train(args, io):
             data, label = data.to(device), label.to(device).squeeze()
             data = data.permute(0, 2, 1)
             batch_size = data.size()[0]
-            pred_seg, logits = model(data.float())
+            logits = model(data.float())
             loss = criterion(logits, label)
             preds = logits.max(dim=1)[1]
             count += batch_size
