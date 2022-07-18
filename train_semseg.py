@@ -396,7 +396,7 @@ if __name__ == "__main__":
                         help='Size of batch)')
     parser.add_argument('--root', type=str, default='/home/bi/study/thesis/data/test', 
                         help='file need to be tested')
-    parser.add_argument('--exp_name', type=str, default='hh', metavar='N',
+    parser.add_argument('--exp', type=str, default='hh', metavar='N',
                         help='experiment version to record result')
     parser.add_argument('--change', type=str, default='hh', metavar='N',
                         help='experiment version to record result')
