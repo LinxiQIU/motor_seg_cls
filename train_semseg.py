@@ -14,7 +14,6 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 from dataloader import *
-# from display import Visuell_PointCloud_per_batch_according_to_label
 from model import *
 import numpy as np
 from torch.utils.data import DataLoader
@@ -66,12 +65,15 @@ def train(args, io):
     model = nn.DataParallel(model)
     print("Let's use", torch.cuda.device_count(), "GPUs!")
 
-    if args.use_sgd:
+    if args.opt == 'sgd':
         print("Use SGD")
         opt = optim.SGD(model.parameters(), lr=args.lr*100, momentum=args.momentum, weight_decay=1e-4)
-    else:
+    elif args.opt == 'adam':
         print("Use Adam")
         opt = optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
+    elif args.opt == 'adamw':
+        print("Use AdamW")
+        opt = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
 
     if args.scheduler == 'cos':
         scheduler = CosineAnnealingLR(opt, args.epochs, eta_min=1e-5)
@@ -198,8 +200,6 @@ def train(args, io):
                 seg_pred = seg_pred.permute(0, 2, 1).contiguous()
                 batch_label = seg.view(-1, 1)[:, 0].cpu().data.numpy()   #array(batch_size*num_points)
                 loss = criterion(seg_pred.view(-1, NUM_CLASS), seg.view(-1,1).squeeze())
-                # if "My_Net4" in args.model or "My_Net5" in args.model or "My_Net6" in args.model or "My_Net7" in args.model:
-                #     loss=loss+loss_cluster(result,goal)*args.factor_cluster
                 seg_pred = seg_pred.contiguous().view(-1, NUM_CLASS)   # (batch_size*num_points , num_class)
                 pred_choice = seg_pred.cpu().data.max(1)[1].numpy()  #array(batch_size*num_points)
                 correct = np.sum(pred_choice == batch_label)
@@ -234,7 +234,7 @@ def train(args, io):
 
             iou_per_class_str = '------- IoU --------\n'
             for l in range(NUM_CLASS):
-                iou_per_class_str += 'class %s weight: %.3f, IoU: %.3f \n' % (
+                iou_per_class_str += 'class %s percentage: %.4f, IoU: %.4f \n' % (
                     labels2categories[l] + ' ' * (14 - len(labels2categories[l])), labelweights[l],
                     total_correct_class[l] / float(total_iou_deno_class[l]))
             io.cprint(iou_per_class_str)
@@ -396,7 +396,7 @@ if __name__ == "__main__":
                         help='Size of batch)')
     parser.add_argument('--root', type=str, default='/home/bi/study/thesis/data/test', 
                         help='file need to be tested')
-    parser.add_argument('--exp', type=str, default='training_125', metavar='N',
+    parser.add_argument('--exp_name', type=str, default='hh', metavar='N',
                         help='experiment version to record result')
     parser.add_argument('--change', type=str, default='hh', metavar='N',
                         help='experiment version to record result')
@@ -414,8 +414,8 @@ if __name__ == "__main__":
                         help='Size of batch)')
     parser.add_argument('--epochs', type=int, default=200, metavar='N',
                         help='number of episode to train ')
-    parser.add_argument('--use_sgd', type=bool, default=True,
-                        help='Use SGD')
+    parser.add_argument('--opt', type=str, default='sgd', choices=['sgd', 'adam', 'adamw'],
+                        help='optimizer to choose, [SGD, Adam, AdamW]')
     parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                         help='learning rate (default: 0.001, 0.1 if using sgd)')
     parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
