@@ -2,7 +2,7 @@
 """
 Created on Sun Jun  5 20:01:12 2022
 
-@author: linux
+@author: linxi Qiu
 """
 
 
@@ -14,7 +14,7 @@ import torch.optim as optim
 import numpy as np
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
-from data_cls import MotorDataset, MotorData
+from data_cls import MotorDataset
 from model_cls import DGCNN_cls
 from util import cal_loss, IOStream
 import sklearn.metrics as metrics
@@ -44,8 +44,8 @@ def train(args, io):
     
     if args.model == 'dgcnn':
         model = DGCNN_cls(args).to(device)
-    # elif args.model == 'pct':
-    #     model = PCT_cls(args).to(device)
+    elif args.model == 'pct':
+        model = PCT_cls(args).to(device)
     else:
         raise Exception('Not implemented')
     print(str(model))
@@ -68,8 +68,7 @@ def train(args, io):
     elif args.scheduler == 'step':
         scheduler = StepLR(opt, step_size=60, gamma=0.2)
         
-    criterion = cal_loss
-    
+    criterion = cal_loss  
     best_val_acc = 0
     for epoch in range(args.epochs):
         ####################
@@ -227,7 +226,7 @@ if __name__ == '__main__':
                         help='initial dropout rate')
     parser.add_argument('--emb_dims', type=int, default=1024, metavar='N',
                         help='Dimension of embeddings')
-    parser.add_argument('--k', type=int, default=20, metavar='N',
+    parser.add_argument('--k', type=int, default=32, metavar='N',
                         help='Num of nearest neighbors to use')
     parser.add_argument('--validation_symbol', type=str, default='Validation', 
                         help='Which datablocks to use for validation')

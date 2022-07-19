@@ -46,15 +46,12 @@ class MotorDataset(Dataset):
         
         self.motor_cat = set([motor.split('_')[1] for motor in motor_ls])
         self.classes = dict(zip(self.motor_cat, range(len(self.motor_cat))))
-        
-        # type_names = [x.split('_')[1] for x in motor_ids]
         self.all_points = [] 
         self.all_types = [] 
         self.all_labels = [] 
         num_points_eachmotor= []
         label_num_eachtype = np.zeros(7)
         for i in tqdm(motor_ids, total=len(motor_ids)):
-
             motor_type = self.classes[i.split('_')[1]]
             motor_type = np.array([motor_type]).astype(np.int64)
             motor_data = np.load(os.path.join(root, i))
@@ -62,7 +59,6 @@ class MotorDataset(Dataset):
             motor_labels = motor_data[:, 6]
             num_eachtype_in_onemotor,_ = np.histogram(motor_labels, bins=7, range=(0,7))
             label_num_eachtype += num_eachtype_in_onemotor
-
             self.all_points.append(point_set)
             self.all_types.append(motor_type)
             self.all_labels.append(motor_labels)
@@ -92,6 +88,50 @@ class MotorDataset(Dataset):
         return chosed_points, chosed_labels, types
 
 
+class MotorData(Dataset):
+    def __init__(self, root, split='train', num_points=2048, test_area=None, transform=None):
+        super().__init__()
+        self.root = root
+        self.num_points = num_points
+        self.transform = transform
+        motor_ls = sorted(os.listdir(root))
+        motor_ids = {}
+        motor_ids['train'] = [motor for motor in motor_ls if '{}'.format(test_area) not in motor]
+        motor_ids['test'] = [motor for motor in motor_ls if '{}'.format(test_area) in motor]
+        self.motor_cat = set([motor.split('_')[1] for motor in motor_ls])
+        self.classes = dict(zip(self.motor_cat, range(len(self.motor_cat))))
+        assert (split == 'train' or split == 'test')
+        type_names = [x.split('_')[1] for x in motor_ids[split]]
+        self.datapath = [(type_names[i], os.path.join(self.root, motor_ids[split][i])) for i
+                          in range(len(motor_ids[split]))]
+        print('The size of %s data is %d' % (split, len(self.datapath)))
+        self.all_points = [None] * len(self.datapath)
+        self.all_cls = [None] * len(self.datapath)
+        self.all_labels = [None] * len(self.datapath)
+        for index in tqdm(range(len(self.datapath)), total=len(self.datapath)):
+            fn = self.datapath[index]
+            motor_type = self.classes[self.datapath[index][0]]
+            motor_type = np.array([motor_type]).astype(np.int64)
+            motor_data = np.load(fn[1])
+            point_set = motor_data[:, 0:3]
+            labels = motor_data[:, 6]
+            self.all_points[index] = point_set
+            self.all_cls[index] = motor_type
+            self.all_labels[index] = labels
+    
+    def __len__(self):
+        return len(self.datapath)
+    
+    def __getitem__(self, index):
+        point_set = self.all_points[index]
+        labels = self.all_labels[index]
+        types = self.all_cls[index]
+        n_points = point_set.shape[0]
+        choice = np.random.choice(n_points, self.num_points, replace=True)
+        point_set = point_set[choice, :]
+        point_set = pc_normalize(point_set)
+        label = labels[choice]
+        return point_set, label, types
 
 
 if __name__ == '__main__':

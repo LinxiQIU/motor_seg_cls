@@ -60,7 +60,6 @@ def train(args, io):
         model = PCT_semseg(args).to(device)
     else:
         raise Exception("Not implemented")
-    #summary(model,input_size=(3,4096),batch_size=1,device='cuda')
 
     model = nn.DataParallel(model)
     print("Let's use", torch.cuda.device_count(), "GPUs!")
@@ -235,7 +234,7 @@ def train(args, io):
             iou_per_class_str = '------- IoU --------\n'
             for l in range(NUM_CLASS):
                 iou_per_class_str += 'class %s percentage: %.4f, IoU: %.4f \n' % (
-                    labels2categories[l] + ' ' * (14 - len(labels2categories[l])), labelweights[l],
+                    labels2categories[l] + ' ' * (20 - len(labels2categories[l])), labelweights[l],
                     total_correct_class[l] / float(total_iou_deno_class[l]))
             io.cprint(iou_per_class_str)
 
