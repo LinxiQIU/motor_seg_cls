@@ -320,7 +320,7 @@ if __name__ == '__main__':
                         help='initial dropout rate')
     parser.add_argument('--emb_dims', type=int, default=1024, metavar='N',
                         help='Dimension of embeddings')
-    parser.add_argument('--k', type=int, default=20, metavar='N',
+    parser.add_argument('--k', type=int, default=32, metavar='N',
                         help='Num of nearest neighbors to use')
     parser.add_argument('--validation_symbol', type=str, default='Validation', 
                         help='Which datablocks to use for validation')
