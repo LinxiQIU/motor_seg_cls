@@ -245,7 +245,7 @@ def train(args, io):
             iou_per_class_str = '------- IoU --------\n'
             for i in range(num_cls):
                 iou_per_class_str += 'class %s percentage: %.4f  IoU: %.4f \n' % (
-                    labels2categories[i] + ' ' * (25 - len(labels2categories[i])), labelweights,
+                    labels2categories[i] + ' ' * (25 - len(labels2categories[i])), labelweights[i],
                     total_correct_class[i] / float(total_iou_deno_class[i]))
             io.cprint(iou_per_class_str)
             
