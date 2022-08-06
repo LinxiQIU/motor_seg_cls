@@ -169,6 +169,7 @@ def train(args, io):
             total_correct = 0
             total_seen = 0
             loss_sum = 0
+            labelweights = np.zeros(num_cls)
             total_seen_class = [0 for _ in range(num_cls)]
             total_correct_class = [0 for _ in range(num_cls)]
             total_iou_deno_class = [0 for _ in range(num_cls)]
