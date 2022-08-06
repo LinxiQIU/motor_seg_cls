@@ -411,7 +411,7 @@ if __name__ == "__main__":
                         help='factor of loss_cluster')
     parser.add_argument('--test_batch_size', type=int, default=16, metavar='batch_size',
                         help='Size of batch)')
-    parser.add_argument('--epochs', type=int, default=200, metavar='N',
+    parser.add_argument('--epochs', type=int, default=100, metavar='N',
                         help='number of episode to train ')
     parser.add_argument('--opt', type=str, default='sgd', choices=['sgd', 'adam', 'adamw'],
                         help='optimizer to choose, [SGD, Adam, AdamW]')
@@ -430,7 +430,7 @@ if __name__ == "__main__":
                         help='dropout rate')
     parser.add_argument('--emb_dims', type=int, default=1024, metavar='N',
                         help='Dimension of embeddings')
-    parser.add_argument('--k', type=int, default=20, metavar='N',
+    parser.add_argument('--k', type=int, default=32, metavar='N',
                         help='Num of nearest neighbors to use')
     parser.add_argument('--npoints', type=int, default=2048, 
                         help='Point Number [default: 2048]')

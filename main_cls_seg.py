@@ -37,12 +37,12 @@ def _init_():
 
 
 def train(args, io):
-    train_loader = DataLoader(MotorData(root=args.root, split='train', 
+    train_loader = DataLoader(MotorDataset(root=args.root, split='train', 
                                            num_points=args.num_points, 
                                            test_area=args.validation_symbol),
                               num_workers=8, batch_size=args.batch_size, shuffle=True, drop_last=True,
                               worker_init_fn=lambda x: np.random.seed(x + int(time.time())))
-    test_loader = DataLoader(MotorData(root=args.root, split='test', 
+    test_loader = DataLoader(MotorDataset(root=args.root, split='test', 
                                           num_points=args.num_points,
                                           test_area=args.validation_symbol),
                              num_workers=8, batch_size=args.batch_size, shuffle=True, drop_last=False)
@@ -199,6 +199,8 @@ def train(args, io):
                 total_correct += correct
                 total_seen += (batch_size * args.num_points)
                 loss_sum += loss
+                tmp, _ = np.histogram(batch_label, range(num_cls + 1))
+                labelweights += tmp
                 for l in range(num_cls):
                     total_seen_class[l] += np.sum(batch_label == l)
                     total_correct_class[l] += np.sum((pred_choice == l) & (batch_label == l))     ### Intersection
@@ -210,6 +212,7 @@ def train(args, io):
                     noBG_correct_class[l-1] += np.sum((pred_choice == l) & (batch_label == l))     ### Intersection
                     noBG_iou_deno_class[l-1] += np.sum((pred_choice == l) | (batch_label == l))     ### Union
             
+            labelweights = labelweights.astype(np.float32) / np.sum(labelweights.astype(np.float32))
             mIoU = np.mean(np.array(total_correct_class) / (np.array(total_iou_deno_class, dtype=np.float64) + 1e-6))
             
             ###### Classification Results (Validation) #######
@@ -240,8 +243,8 @@ def train(args, io):
             
             iou_per_class_str = '------- IoU --------\n'
             for i in range(num_cls):
-                iou_per_class_str += 'class %s IoU: %.3f \n' % (
-                    labels2categories[i] + ' ' * (20 - len(labels2categories[i])),
+                iou_per_class_str += 'class %s percentage: %.4f  IoU: %.4f \n' % (
+                    labels2categories[i] + ' ' * (25 - len(labels2categories[i])), labelweights,
                     total_correct_class[i] / float(total_iou_deno_class[i]))
             io.cprint(iou_per_class_str)
             
@@ -294,9 +297,9 @@ if __name__ == '__main__':
                         help='Size of batch')
     parser.add_argument('--test_batch_size', type=int, default=16, metavar='batch_size',
                         help='Size of batch)')
-    parser.add_argument('--epochs', type=int, default=200, metavar='N',
+    parser.add_argument('--epochs', type=int, default=100, metavar='N',
                         help='number of episode to train ')
-    parser.add_argument('--opt', type=str, default='sgd', choices=['sgd', 'adam', 'adamw'],
+    parser.add_argument('--opt', type=str, default='adamw', choices=['sgd', 'adam', 'adamw'],
                         help='optimizer to use, [SGD, Adam, AdamW]')
     parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                         help='learning rate (default: 0.001, 0.1 if using sgd)')
