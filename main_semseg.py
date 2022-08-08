@@ -51,12 +51,15 @@ def train(args, io):
     model = nn.DataParallel(model)
     print("Let's use", torch.cuda.device_count(), "GPUs!")
     
-    if args.use_sgd:
+    if args.opt == 'sgd':
         print("Use SGD")
         opt = optim.SGD(model.parameters(), lr=args.lr*100, momentum=args.momentum, weight_decay=1e-4)
-    else:
+    elif args.opt == 'adam':
         print("Use Adam")
         opt = optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
+    elif args.opt == 'adamw':
+        print("Use AdamW")
+        opt = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
 
     if args.scheduler == 'cos':
         scheduler = CosineAnnealingLR(opt, args.epochs, eta_min=1e-5)
@@ -87,7 +90,7 @@ def train(args, io):
             points = points.permute(0, 2, 1)                            #(batch_size, features, num_points)
             batch_size = points.size()[0]
             opt.zero_grad()
-            seg_pred = model(points.float())        #(batch_size, class_categories, num_points)
+            seg_pred, cls_pred = model(points.float())        #(batch_size, class_categories, num_points)
             seg_pred = seg_pred.permute(0, 2, 1).contiguous()                      #(batch_size,num_points, class_categories)
             batch_label = target.view(-1, 1)[:, 0].cpu().data.numpy()              #array(batch_size*num_points)
             loss = criterion(seg_pred.view(-1, NUM_CLASS), target.view(-1,1).squeeze())     #a scalar
@@ -143,7 +146,7 @@ def train(args, io):
                 points = normalize_data(points)
                 points = points.permute(0, 2, 1)
                 batch_size = points.size()[0]
-                seg_pred,trans,result_,goal_= model(points, seg)
+                seg_pred,cls_pred = model(points, seg)
                 seg_pred = seg_pred.permute(0, 2, 1).contiguous()
                 batch_label = seg.view(-1, 1)[:, 0].cpu().data.numpy()   # array(batch_size*num_points)
                 loss = criterion(seg_pred.view(-1, NUM_CLASS), seg.view(-1,1).squeeze())
@@ -245,10 +248,10 @@ if __name__ == "__main__":
                         help='factor of loss_cluster')
     parser.add_argument('--test_batch_size', type=int, default=16, metavar='batch_size',
                         help='Size of batch)')
-    parser.add_argument('--epochs', type=int, default=200, metavar='N',
+    parser.add_argument('--epochs', type=int, default=100, metavar='N',
                         help='number of episode to train ')
-    parser.add_argument('--use_sgd', type=bool, default=True,
-                        help='Use SGD')
+    parser.add_argument('--opt', type=str, default='adamw', choices=['sgd', 'adam', 'adamw'],
+                        help='optimizer to choose, [SGD, Adam, AdamW]')
     parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                         help='learning rate (default: 0.001, 0.1 if using sgd)')
     parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
@@ -264,7 +267,7 @@ if __name__ == "__main__":
                         help='dropout rate')
     parser.add_argument('--emb_dims', type=int, default=1024, metavar='N',
                         help='Dimension of embeddings')
-    parser.add_argument('--k', type=int, default=20, metavar='N',
+    parser.add_argument('--k', type=int, default=32, metavar='N',
                         help='Num of nearest neighbors to use')
     parser.add_argument('--npoints', type=int, default=2048, 
                         help='Point Number [default: 2048]')
