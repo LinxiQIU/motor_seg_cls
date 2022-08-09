@@ -13,6 +13,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 from model_cls_seg import DGCNN_cls_semseg
+from model import PointNet2_semseg
 from torch.utils.data import DataLoader
 from dataloader import *
 from util import cal_loss, IOStream
@@ -46,6 +47,8 @@ def train(args, io):
     tmp = torch.cuda.max_memory_allocated()
     if args.model == 'dgcnn':
         model = DGCNN_cls_semseg(args).to(device)
+    elif args.model == 'pointnet':
+        model = PointNet2_semseg(args).to(device)
     else:
         raise Exception("Not implemented")
     model = nn.DataParallel(model)
@@ -226,7 +229,7 @@ if __name__ == "__main__":
     # Training settings
     parser = argparse.ArgumentParser(description='Point Cloud Semantic Segmentation')
     parser.add_argument('--model', type=str, default='dgcnn', metavar='N',
-                        choices=['dgcnn', 'PCT'],
+                        choices=['dgcnn', 'pointnet'],
                         help='Model to use, [dgcnn]')
     parser.add_argument('--batch_size', type=int, default=16, metavar='batch_size',
                         help='Size of batch)')
