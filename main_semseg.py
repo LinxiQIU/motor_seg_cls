@@ -16,7 +16,7 @@ from model_cls_seg import DGCNN_cls_semseg
 from model import PointNet2_semseg
 from torch.utils.data import DataLoader
 from dataloader import *
-from util import cal_loss, IOStream
+from util import *
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 import time
@@ -91,7 +91,7 @@ def train(args, io):
         
         for i, (points, target) in tqdm(enumerate(train_loader), total=len(train_loader), smoothing=0.9):
             points, target = points.to(device), target.to(device)
-            points = normalize_data(points)
+            # points = normalize_data(points)
             points = points.permute(0, 2, 1)                            #(batch_size, features, num_points)
             batch_size = points.size()[0]
             opt.zero_grad()
@@ -148,7 +148,7 @@ def train(args, io):
 
             for i, (points,seg) in tqdm(enumerate(test_loader),total=len(test_loader),smoothing=0.9):
                 points, seg = points.to(device), seg.to(device)
-                points = normalize_data(points)
+                # points = normalize_data(points)
                 points = points.permute(0, 2, 1)
                 batch_size = points.size()[0]
                 seg_pred,cls_pred = model(points, seg)
