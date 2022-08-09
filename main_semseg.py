@@ -74,7 +74,7 @@ def train(args, io):
     best_iou = 0
     best_bolts_iou = 0
     
-    for epoch in range(start_epoch, args.epochs):
+    for epoch in range(args.epochs):
         ####################
         # Train
         ####################
