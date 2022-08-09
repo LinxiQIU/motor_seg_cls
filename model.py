@@ -233,9 +233,9 @@ class PointNet2_semseg(nn.Module):
 
     def forward(self, xyz):
         xyz = xyz.float()
-        10_xyz = xyz[:, :3, :]
+        l0_xyz = xyz[:, :3, :]
         xyz = xyz.permute(0, 2, 1)
-        10_points = xyz
+        l0_points = xyz
 
         l1_xyz, l1_points = self.sa1(l0_xyz, l0_points)
         l2_xyz, l2_points = self.sa2(l1_xyz, l1_points)
