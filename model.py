@@ -11,7 +11,7 @@ import torch
 import torch.nn as nn
 from attention_util import *
 from util import *
-from pointnet_util import index_points
+from pointnet_utils import PointNetSetAbstraction, PointNetFeaturePropagation, index_points
 from torch.autograd import Variable
 
 

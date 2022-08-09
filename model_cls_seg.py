@@ -8,7 +8,7 @@ Created on Tue Jul  5 17:27:37 2022
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+from pointnet_utils import PointNetSetAbstraction, PointNetFeaturePropagation
 
 def knn(x, k):
     """
