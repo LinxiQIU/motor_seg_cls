@@ -28,10 +28,10 @@ labels2categories = {i:cls for i,cls in enumerate(classes)}       # dictionary f
 def _init_():
     if not os.path.exists('outputs'):
         os.makedirs('outputs')
-    if not os.path.exists('outputs/' + args.model + '/' + args.exp_name):
-        os.makedirs('outputs/' + args.model + '/' + args.exp_name)
-    if not os.path.exists('outputs/' + args.model + '/' + args.exp_name + '/' + args.change + '/models'):
-        os.makedirs('outputs/' + args.model + '/' + args.exp_name + '/' + args.change + '/models')
+    if not os.path.exists('outputs/' + args.model + '/' + args.exp):
+        os.makedirs('outputs/' + args.model + '/' + args.exp)
+    if not os.path.exists('outputs/' + args.model + '/' + args.exp + '/' + args.change + '/models'):
+        os.makedirs('outputs/' + args.model + '/' + args.exp + '/' + args.change + '/models')
 
 
 def train(args, io):
@@ -193,7 +193,7 @@ def train(args, io):
 
             if mIoU >= best_iou:
                 best_iou = mIoU
-                savepath = str(BASE_DIR)+'/outputs/'+args.model +'/'+ args.exp_name +'/' + args.change + '/models/best_m.pth'
+                savepath = str(BASE_DIR)+'/outputs/'+args.model +'/'+ args.exp +'/' + args.change + '/models/best_m.pth'
                 state = {
                     'epoch': epoch,
                     'model_state_dict': model.state_dict(),
@@ -206,7 +206,7 @@ def train(args, io):
             
             if cur_bolts_iou >= best_bolts_iou:
                 best_bolts_iou=cur_bolts_iou
-                savepath = str(BASE_DIR)+'/outputs/'+args.model +'/'+ args.exp_name +'/' + args.change + '/models/best.pth'
+                savepath = str(BASE_DIR)+'/outputs/'+args.model +'/'+ args.exp +'/' + args.change + '/models/best.pth'
                 state = {
                     'epoch': epoch,
                     'model_state_dict': model.state_dict(),
@@ -292,9 +292,9 @@ if __name__ == "__main__":
     
     _init_()
     
-    writer = SummaryWriter('outputs/' + args.model + '/' + args.exp_name + '/' + args.change)
+    writer = SummaryWriter('outputs/' + args.model + '/' + args.exp + '/' + args.change)
     
-    io = IOStream('outputs/' + args.model + '/' + args.exp_name + '/' + args.change + '/result.log')
+    io = IOStream('outputs/' + args.model + '/' + args.exp + '/' + args.change + '/result.log')
     io.cprint(str(args))
     
     args.cuda = not args.no_cuda and torch.cuda.is_available()
