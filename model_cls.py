@@ -12,7 +12,7 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 import torch.nn.functional as F
-
+from pointnet_utils import PointNetSetAbstraction
 
 
 def knn(x, k):
@@ -159,37 +159,33 @@ class DGCNN_cls(nn.Module):
 
 
 
-class PointNet_cls(nn.Module):
+class PointNet2_cls(nn.Module):
     def __init__(self, args, output_channels=5):
-        super(PointNet_cls, self).__init__()
-        self.args = args
-        self.conv1 = nn.Conv1d(3, 64, kernel_size=1, bias=False)
-        self.conv2 = nn.Conv1d(64, 64, kernel_size=1, bias=False)
-        self.conv3 = nn.Conv1d(64, 64, kernel_size=1, bias=False)
-        self.conv4 = nn.Conv1d(64, 128, kernel_size=1, bias=False)
-        self.conv5 = nn.Conv1d(128, args.emb_dims, kernel_size=1, bias=False)
-        self.bn1 = nn.BatchNorm1d(64)
-        self.bn2 = nn.BatchNorm1d(64)
-        self.bn3 = nn.BatchNorm1d(64)
-        self.bn4 = nn.BatchNorm1d(128)
-        self.bn5 = nn.BatchNorm1d(args.emb_dims)
-        self.linear1 = nn.Linear(args.emb_dims, 512, bias=False)
-        self.bn6 = nn.BatchNorm1d(512)
-        self.dp1 = nn.Dropout()
-        self.linear2 = nn.Linear(512, output_channels)
+        super(PointNet2_cls, self).__init__()
+        self.sa1 = PointNetSetAbstraction(npoint=512, radius=0.2, nsample=32, in_channel=6, mlp=[64, 64, 128], group_all=False)
+        self.sa2 = PointNetSetAbstraction(128, 0.4, 64, 128+3, [128, 128, 256], False)
+        self.sa3 = PointNetSetAbstraction(None, None, None, 256+3, [256, 512, 1024], False)
+        self.fc1 = nn.Linear(1024, 512)
+        self.bn1 = nn.BatchNorm1d(512)
+        self.drop1 = nn.Dropout(0.4)
+        self.fc2 = nn.Linear(512, 256)
+        self.bn2 = nn.BatchNorm1d(256)
+        self.drop2 = nn.Dropout(0.4)
+        self.fc3 = nn.Linear(256, output_channels)
 
-    def forward(self, x):
-        x = F.relu(self.bn1(self.conv1(x)))
-        x = F.relu(self.bn2(self.conv2(x)))
-        x = F.relu(self.bn3(self.conv3(x)))
-        x = F.relu(self.bn4(self.conv4(x)))
-        x = F.relu(self.bn5(self.conv5(x)))
-        x = F.adaptive_max_pool1d(x, 1).squeeze()
-        x = F.relu(self.bn6(self.linear1(x)))
-        x = self.dp1(x)
-        x = self.linear2(x)
+    def forward(self, xyz):
+        batch_size = xyz.size(0)
+        norm = None
+        l1_xyz, l1_points = self.sa1(xyz, None)
+        l2_xyz, l2_points = self.sa2(l1_xyz, l1_points)
+        l3_xyz, l3_points = self.sa3(l2_xyz, l2_points)
+        x = l3_points.view(batch_size, 1024)
+        x = self.drop1(F.relu(self.bn1(self.fc1(x))))
+        x = self.drop2(F.relu(self.bn2(self.fc2(x))))
+        x = self.fc3(x)
+        x = F.log_softmax(x, -1)
         return x
-
+       
 
 class PCT_cls(nn.Module):
     def __init__(self, output_channels=5):
@@ -243,27 +239,4 @@ class PCT_cls(nn.Module):
         return x
 
 
-class SA_Layer_Single_Head(nn.Module):
-    def __init__(self, channels):
-        super(SA_Layer_Single_Head, self).__init__()
-        self.q_conv = nn.Conv1d(channels, channels // 4, 1, bias=False)
-        self.k_conv = nn.Conv1d(channels, channels // 4, 1, bias=False)
-        self.v_conv = nn.Conv1d(channels, channels, 1)
-        self.trans_conv = nn.Conv1d(channels, channels, 1)
-        self.after_norm = nn.BatchNorm1d(channels)
-        self.act = nn.ReLU()
-        self.softmax = nn.Softmax(dim=-1)
 
-    def forward(self, x):
-        x = x.permute(0,2,1)
-        x_q = self.q_conv(x).permute(0, 2, 1) # b, n, c 
-        x_k = self.k_conv(x) # b, c, n        
-        x_v = self.v_conv(x)
-        energy = nn.bmm(x_q, x_k) # b, n, n (x_q)@(x_k)
-        attention = self.softmax(energy)
-        attention = attention / (1e-6 + attention.sum(dim=1, keepdims=True))
-        x_r = nn.bmm(x_v, attention) # b, c, n 
-        x_r = self.act(self.after_norm(self.trans_conv(x - x_r)))
-        x = x + x_r
-        x = x.permute(0,2,1)
-        return x

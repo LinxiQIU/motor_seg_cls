@@ -15,7 +15,7 @@ import numpy as np
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 from data_cls import MotorDataset, MotorData
-from model_cls import DGCNN_cls
+from model_cls import DGCNN_cls, PointNet2_cls
 from util import cal_loss, IOStream
 import sklearn.metrics as metrics
 from torch.utils.tensorboard import SummaryWriter
@@ -44,8 +44,8 @@ def train(args, io):
     
     if args.model == 'dgcnn':
         model = DGCNN_cls(args).to(device)
-    elif args.model == 'pct':
-        model = PCT_cls(args).to(device)
+    elif args.model == 'pointnet2':
+        model = PointNet2_cls(args).to(device)
     else:
         raise Exception('Not implemented')
     print(str(model))
@@ -195,7 +195,7 @@ if __name__ == '__main__':
     parser.add_argument('--change', type=str, default='hh', metavar='N',
                         help='explict parameters in experiment')
     parser.add_argument('--model', type=str, default='dgcnn', metavar='N',
-                        choices=['dgcnn', 'pct'],
+                        choices=['dgcnn', 'pointnet2'],
                         help='Model to use, [dgcnn, pct]')
     parser.add_argument('--root', type=str, metavar='N',default='E:\\dataset',
                         help='folder of dataset')
