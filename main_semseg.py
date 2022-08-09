@@ -19,6 +19,8 @@ from dataloader import *
 from util import cal_loss, IOStream
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
+import time
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 classes = ['clamping_system', 'cover', 'gear_container', 'charger', 'bottom', 'side_bolt', 'cover_bolt']
