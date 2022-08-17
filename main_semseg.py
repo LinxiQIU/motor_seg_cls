@@ -151,7 +151,7 @@ def train(args, io):
                 # points = normalize_data(points)
                 points = points.permute(0, 2, 1)
                 batch_size = points.size()[0]
-                seg_pred,cls_pred = model(points, seg)
+                seg_pred, cls_pred = model(points, seg)
                 seg_pred = seg_pred.permute(0, 2, 1).contiguous()
                 batch_label = seg.view(-1, 1)[:, 0].cpu().data.numpy()   # array(batch_size*num_points)
                 loss = criterion(seg_pred.view(-1, NUM_CLASS), seg.view(-1,1).squeeze())
