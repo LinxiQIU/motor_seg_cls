@@ -39,9 +39,9 @@ def _init_():
 def train(args, io):
     NUM_POINT=args.npoints
     print("start loading training data ...")
-    TRAIN_DATASET = MotorDataset(split='train', data_root=args.root, num_points=NUM_POINT, test_area=args.validation_symbol)
+    TRAIN_DATASET = MotorDataset(split='train', root=args.root, num_points=NUM_POINT, test_area=args.validation_symbol)
     print("start loading test data ...")
-    TEST_DATASET = MotorDataset(split='test', data_root=args.root, num_points=NUM_POINT, test_area=args.validation_symbol)
+    TEST_DATASET = MotorDataset(split='test', root=args.root, num_points=NUM_POINT, test_area=args.validation_symbol)
     train_loader = DataLoader(TRAIN_DATASET, num_workers=8, batch_size=args.batch_size, shuffle=True, drop_last=True, 
                               worker_init_fn=lambda x: np.random.seed(x + int(time.time())))
     test_loader = DataLoader(TEST_DATASET, num_workers=8, batch_size=args.test_batch_size, shuffle=True, drop_last=False)
