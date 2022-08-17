@@ -147,12 +147,12 @@ def train(args, io):
             model = model.eval()
             args.training = False
 
-            for i, (points,seg) in tqdm(enumerate(test_loader),total=len(test_loader),smoothing=0.9):
+            for i, (points, seg) in tqdm(enumerate(test_loader),total=len(test_loader),smoothing=0.9):
                 points, seg = points.to(device), seg.to(device)
                 # points = normalize_data(points)
                 points = points.permute(0, 2, 1)
                 batch_size = points.size()[0]
-                seg_pred, cls_pred = model(points, seg)
+                seg_pred, cls_pred = model(points.float())
                 seg_pred = seg_pred.permute(0, 2, 1).contiguous()
                 batch_label = seg.view(-1, 1)[:, 0].cpu().data.numpy()   # array(batch_size*num_points)
                 loss = criterion(seg_pred.view(-1, NUM_CLASS), seg.view(-1,1).squeeze())
@@ -248,10 +248,6 @@ if __name__ == "__main__":
                         help='evaluate the model')
     parser.add_argument('--training', type=bool,  default=True,
                         help='evaluate the model')
-    parser.add_argument('--factor_cluster', type=float, default=0.2, metavar='F',
-                        help='factor of loss_cluster')
-    parser.add_argument('--factor_trans', type=float, default=0.01, metavar='F',
-                        help='factor of loss_cluster')
     parser.add_argument('--test_batch_size', type=int, default=16, metavar='batch_size',
                         help='Size of batch)')
     parser.add_argument('--epochs', type=int, default=100, metavar='N',
@@ -281,14 +277,6 @@ if __name__ == "__main__":
                         help='Which datablocks to use for validation')
     parser.add_argument('--test_symbol', type=str, default='Test', 
                         help='Which datablocks to use for test')
-    parser.add_argument('--bolt_weight', type=float, default=1.0, 
-                        help='Training weight of bolts before init [default: 1.0]')
-    parser.add_argument('--num_heads', type=int, default=4, metavar='num_attention_heads',
-                        help='number of attention_heads for self_attention ')
-    parser.add_argument('--num_layers', type=int, default=1, metavar='num_attention_hea',
-                        help='number of attention_heads for self_attention ')
-    parser.add_argument('--self_encoder_latent_features', type=int, default=128, metavar='hidden_size',
-                        help='number of hidden_size for self_attention ')
     parser.add_argument('--hidden_size', type=int, default=512, metavar='hidden_size',
                         help='number of hidden_size for self_attention ')
     args = parser.parse_args()
