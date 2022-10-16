@@ -105,7 +105,7 @@ def train(args, io):
             seg_pred = seg_pred.permute(0, 2, 1).contiguous()
             batch_label = seg.view(-1, 1)[:, 0].cpu().data.numpy()
             loss_seg = criterion(seg_pred.view(-1, num_cls), seg.view(-1, 1).squeeze())
-            loss = (loss_cls * loss_seg) ** 0.5
+            loss = loss_cls + loss_seg
             loss.backward()
             opt.step()
             preds = logits.max(dim=1)[1]
@@ -180,7 +180,7 @@ def train(args, io):
                 seg_pred = seg_pred.permute(0, 2, 1).contiguous()
                 batch_label = seg.view(-1, 1)[:, 0].cpu().data.numpy()
                 loss_seg = criterion(seg_pred.view(-1, num_cls), seg.view(-1, 1).squeeze())
-                loss = (loss_cls*loss_seg) ** 0.5
+                loss = loss_cls + loss_seg
                 preds = logits.max(dim=1)[1]
                 count += batch_size
                 val_loss += loss.item() * batch_size
