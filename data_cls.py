@@ -74,7 +74,8 @@ class MotorData(Dataset):
         self.motor_cat = set([motor.split('_')[1] for motor in motor_ls])
         self.classes = dict(zip(self.motor_cat, range(len(self.motor_cat))))        
         self.all_points = [] 
-        self.all_types = [] 
+
+        self.all_bolt_num = []
         num_points_all= []
         for ids in tqdm(motor_ids, total=len(motor_ids)):
             motor_type = self.classes[ids.split('_')[1]]
@@ -104,17 +105,17 @@ class MotorData(Dataset):
         choose = np.random.choice(n_points, self.num_points, replace=True)
         chosed_points = point_set[choose, :]       
         chosed_points = pc_normalize(chosed_points)
-        return chosed_points, types
+        return chosed_points, torch.Tensor(types)
         
-            
+                
 
 if __name__ == '__main__':
     import torch
-    data = MotorDataset(root='E:\\dataset', split='test', test_area='Validation')
-    Dataloader = torch.utils.data.DataLoader(data, batch_size=16, shuffle=False)
+    data = MotorData(root='E:\\dataset1000', split='test', test_area='Validation')
+    Dataloader = torch.utils.data.DataLoader(data, batch_size=16, shuffle=True)
     for points, types in Dataloader:
         print(points.shape)
-        print(types.shape)
+        print(types)
         
         
         

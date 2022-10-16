@@ -75,7 +75,6 @@ def train(args, io):
     print("Starting from scratch!")
     
     criterion = cal_loss
-    # loss_cluster = nn.MSELoss()
     num_cls = 7
     best_iou = 0
     best_bolts_iou = 0
@@ -106,7 +105,7 @@ def train(args, io):
             seg_pred = seg_pred.permute(0, 2, 1).contiguous()
             batch_label = seg.view(-1, 1)[:, 0].cpu().data.numpy()
             loss_seg = criterion(seg_pred.view(-1, num_cls), seg.view(-1, 1).squeeze())
-            loss = 0.5*loss_cls + loss_seg
+            loss = (loss_cls * loss_seg) ** 0.5
             loss.backward()
             opt.step()
             preds = logits.max(dim=1)[1]
@@ -124,7 +123,9 @@ def train(args, io):
                 total_correct_class__[l] += np.sum((pred_choice == l) & (batch_label == l))    # Intersection
                 total_iou_deno_class__[l] += np.sum((pred_choice == l) | (batch_label == l))   # Union
         mIoU__ = np.mean(np.array(total_correct_class__) / (np.array(total_iou_deno_class__, dtype=np.float64) + 1e-6))
-        
+        cb_IoU = total_correct_class__[6]/float(total_iou_deno_class__[6])
+        Bolt_IoU = (total_correct_class__[6] + total_correct_class__[5]) / (float(total_iou_deno_class__[6]) + float(total_iou_deno_class__[5]))
+        cls_acc = metrics.accuracy_score(cls_true, cls_pred)
         if args.scheduler == 'cos':
             scheduler.step()
         elif args.scheduler == 'step':
@@ -136,26 +137,17 @@ def train(args, io):
         
         cls_true = np.concatenate(cls_true)
         cls_pred = np.concatenate(cls_pred)
-        outstr_cls = 'Train %d, loss: %.6f, cls train acc: %.6f, cls train avg acc: %.6f' % (epoch,
-                                                                                 train_loss*1.0/count,
-                                                                                 metrics.accuracy_score(
-                                                                                     cls_true, cls_pred),
-                                                                                 metrics.balanced_accuracy_score(
-                                                                                     cls_true, cls_pred))
-        io.cprint(outstr_cls)
+        outstr_train = 'Train %d, loss: %.5f, cls acc: %.5f, seg acc:%.5f, mIoU_train:%.5f, cb_IoU_train:%.5f, Bolt_IoU_train:%.5f' % (epoch,
+            train_loss*1.0/count, cls_acc, total_correct / float(total_seen), mIoU__, cb_IoU, Bolt_IoU)
+        io.cprint(outstr_train)
         writer.add_scalar('learning rate/lr', opt.param_groups[0]['lr'], epoch)
-        # writer.add_scalar('Loss/train loss', train_loss*1.0/count, epoch)
-        writer.add_scalar('Accuracy/train cls acc', metrics.accuracy_score(cls_true, cls_pred), epoch)
+        writer.add_scalar('Loss/train loss', train_loss*1.0/count, epoch)
+        writer.add_scalar('Accuracy/train cls acc', cls_acc, epoch)
         writer.add_scalar('Average Accuracy/train avg acc', metrics.balanced_accuracy_score(cls_true, cls_pred), epoch)
-        outstr_sem_seg = 'Train %d, seg loss: %.6f, seg train acc: %.6f ' % (epoch, 
-                                                              loss_sum / num_batches,
-                                                              total_correct / float(total_seen))
-        io.cprint(outstr_sem_seg)
-        writer.add_scalar('Loss/Train mean Loss', loss_sum / num_batches, epoch)
         writer.add_scalar('Accuracy/Train seg accuracy', (total_correct / float(total_seen)), epoch)
         writer.add_scalar('mIoU/Train mean IoU', mIoU__, epoch)
-        writer.add_scalar('IoU of cover_bolt/train', total_correct_class__[6]/float(total_iou_deno_class__[6]), epoch)
-        writer.add_scalar('IoU of bolt/train', (total_correct_class__[6] + total_correct_class__[5]) / (float(total_iou_deno_class__[6]) + float(total_iou_deno_class__[5])), epoch)
+        writer.add_scalar('IoU of cover_bolt/train', cb_IoU, epoch)
+        writer.add_scalar('IoU of bolt/train', Bolt_IoU, epoch)
         
         ####################
         # Validation
@@ -187,7 +179,7 @@ def train(args, io):
                 seg_pred = seg_pred.permute(0, 2, 1).contiguous()
                 batch_label = seg.view(-1, 1)[:, 0].cpu().data.numpy()
                 loss_seg = criterion(seg_pred.view(-1, num_cls), seg.view(-1, 1).squeeze())
-                loss = loss_cls + loss_seg
+                loss = (loss_cls*loss_seg) ** 0.5
                 preds = logits.max(dim=1)[1]
                 count += batch_size
                 val_loss += loss.item() * batch_size
@@ -272,8 +264,6 @@ def train(args, io):
                 torch.save(state, save_path)
             io.cprint('Best IoU of bolts: %f' % best_bolts_iou)
             io.cprint('\n\n')
-        # writer.add_scalar('learning rate', opt.param_groups[0]['lr'], epoch)
-        # writer.add_scalar('Loss/Validation mean loss', loss_sum / num_batches, epoch)
         writer.add_scalar('Accuracy/Validation accuracy', total_correct / float(total_seen), epoch)
         writer.add_scalar('mIoU/Validation mean MoU', mIoU, epoch)
         writer.add_scalar('IoU of bolt/Validation', (total_correct_class[5] + total_correct_class[6]) / (float(total_iou_deno_class[5]) + float(total_iou_deno_class[6])), epoch)
