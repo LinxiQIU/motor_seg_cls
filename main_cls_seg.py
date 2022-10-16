@@ -65,7 +65,7 @@ def train(args, io):
         opt = optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
     elif args.opt == 'adamw':
         print("Use AdamW")
-        opt = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
+        opt = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-2)
     
     if args.scheduler == 'cos':
         scheduler = CosineAnnealingLR(opt, args.epochs, eta_min=1e-5)
@@ -125,7 +125,7 @@ def train(args, io):
         mIoU__ = np.mean(np.array(total_correct_class__) / (np.array(total_iou_deno_class__, dtype=np.float64) + 1e-6))
         cb_IoU = total_correct_class__[6]/float(total_iou_deno_class__[6])
         Bolt_IoU = (total_correct_class__[6] + total_correct_class__[5]) / (float(total_iou_deno_class__[6]) + float(total_iou_deno_class__[5]))
-        cls_acc = metrics.accuracy_score(cls_true, cls_pred)
+        
         if args.scheduler == 'cos':
             scheduler.step()
         elif args.scheduler == 'step':
@@ -137,6 +137,7 @@ def train(args, io):
         
         cls_true = np.concatenate(cls_true)
         cls_pred = np.concatenate(cls_pred)
+        cls_acc = metrics.accuracy_score(cls_true, cls_pred)
         outstr_train = 'Train %d, loss: %.5f, cls acc: %.5f, seg acc:%.5f, mIoU_train:%.5f, cb_IoU_train:%.5f, Bolt_IoU_train:%.5f' % (epoch,
             train_loss*1.0/count, cls_acc, total_correct / float(total_seen), mIoU__, cb_IoU, Bolt_IoU)
         io.cprint(outstr_train)
