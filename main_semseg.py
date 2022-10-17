@@ -65,7 +65,7 @@ def train(args, io):
         opt = optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
     elif args.opt == 'adamw':
         print("Use AdamW")
-        opt = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
+        opt = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-2)
 
     if args.scheduler == 'cos':
         scheduler = CosineAnnealingLR(opt, args.epochs, eta_min=1e-5)
@@ -112,7 +112,9 @@ def train(args, io):
                 total_correct_class__[l] += np.sum((pred_choice == l) & (batch_label == l))
                 total_iou_deno_class__[l] += np.sum(((pred_choice == l) | (batch_label == l)))
         mIoU__ = np.mean(np.array(total_correct_class__) / (np.array(total_iou_deno_class__, dtype=np.float64) + 1e-6))
-        
+        cb_IoU = total_correct_class__[6]/float(total_iou_deno_class__[6])
+        Bolt_IoU = (total_correct_class__[6]+total_correct_class__[5]) / (float(total_iou_deno_class__[6])+float(total_iou_deno_class__[5]))
+
         if args.scheduler == 'cos':
             scheduler.step()
         elif args.scheduler == 'step':
@@ -122,13 +124,14 @@ def train(args, io):
                 for param_group in opt.param_groups:
                     param_group['lr'] = 1e-5
 
-        outstr = 'Train %d, loss: %.6f, train acc: %.6f ' % (epoch,(loss_sum / num_batches),(total_correct / float(total_seen)))
+        outstr = 'Train %d, loss: %.6f, train acc: %.6f, train mIoU:%.5f, cb_IoU:%.5f, Bolt_IoU:%.5f' % (epoch,
+            (loss_sum / num_batches),(total_correct / float(total_seen)), mIoU__, cb_IoU, Bolt_IoU)
         io.cprint(outstr)
         writer.add_scalar('Loss/Train mean Loss', (loss_sum / num_batches), epoch)
         writer.add_scalar('Accuracy/Train accuracy', (total_correct / float(total_seen)), epoch)
-        writer.add_scalar('mIoU/Train mean IoU', (mIoU__), epoch)
-        writer.add_scalar('IoU of cover_bolt/train', (total_correct_class__[6]/float(total_iou_deno_class__[6])), epoch)
-        writer.add_scalar('IoU of bolt/train',((total_correct_class__[6]+total_correct_class__[5]) / (float(total_iou_deno_class__[6])+float(total_iou_deno_class__[5]))), epoch)
+        writer.add_scalar('mIoU/Train mean IoU', mIoU__, epoch)
+        writer.add_scalar('IoU of cover_bolt/train', cb_IoU, epoch)
+        writer.add_scalar('IoU of bolt/train', Bolt_IoU, epoch)
         ####################
         # Validation
         ####################
@@ -177,10 +180,11 @@ def train(args, io):
             
             labelweights = labelweights.astype(np.float32) / np.sum(labelweights.astype(np.float32))
             mIoU = np.mean(np.array(total_correct_class) / (np.array(total_iou_deno_class, dtype=np.float64) + 1e-6))
-            
-            outstr = 'Validation with backgroud----epoch: %d,  eval mean loss %.6f,  eval mIoU %.6f,  eval point acc %.6f, eval point avg class IoU %.6f' % (epoch,(loss_sum / num_batches),mIoU,
-                                                        (total_correct / float(total_seen)),(np.mean(np.array(total_correct_class) / (np.array(total_seen_class, dtype=np.float64) + 1e-6))))
+            cb_IoU_wB = total_correct_class[6]/float(total_iou_deno_class[6])
+            Bolt_IoU_wB = (total_correct_class[6]+total_correct_class[5]) / (float(total_iou_deno_class[6])+float(total_iou_deno_class[5]))
 
+            outstr = 'Validation with backgroud----epoch: %d,  eval mean loss %.6f,  eval mIoU %.6f, eval_cb_IoU:%5.f, eval_bolt_Iou:%.5f, eval point acc %.6f, eval point avg class IoU %.6f' % (epoch,(loss_sum / num_batches),mIoU,
+                                                        cb_IoU_wB, Bolt_IoU_wB, (total_correct / float(total_seen)),(np.mean(np.array(total_correct_class) / (np.array(total_seen_class, dtype=np.float64) + 1e-6))))
             io.cprint(outstr)
             noBG_mIoU = np.mean(np.array(noBG_correct_class) / (np.array(noBG_iou_deno_class, dtype=np.float64) + 1e-6))
             outstr_without_background='Validation without backgroud----epoch: %d, mIoU %.6f,  eval point accuracy: %.6f, eval point avg class acc: %.6f' % (epoch,noBG_mIoU,
@@ -223,8 +227,8 @@ def train(args, io):
         writer.add_scalar('Loss/Validation mean loss', loss_sum / num_batches, epoch)
         writer.add_scalar('Accuracy/Validation accuracy', total_correct / float(total_seen), epoch)
         writer.add_scalar('mIoU/Validation mean MoU', mIoU, epoch)
-        writer.add_scalar('IoU of bolt/Validation', (total_correct_class[5] + total_correct_class[6]) / (float(total_iou_deno_class[5]) + float(total_iou_deno_class[6])), epoch)
-        writer.add_scalar('IoU of cover_bolt/Validation', total_correct_class[6] / float(total_iou_deno_class[6]), epoch)
+        writer.add_scalar('IoU of bolt/Validation', cur_bolts_iou, epoch)
+        writer.add_scalar('IoU of cover_bolt/Validation', Bolt_IoU_wB, epoch)
     io.close()
 
 
