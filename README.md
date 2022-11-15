@@ -20,13 +20,17 @@ The task of classification is to classify the key object in the scene into the p
 CUDA_VISIBLE_DEVICES=6,7 python main_cls.py --exp_name classification --change adamw --root /home/ies/qiu/dataset/dataset1000
 ```
 
-Explanation of every important parameter:
+Explanation of the important parameters:
 
-> CUDA_VISIBLE_DEVICES: set the visible gpu
-> main_cls.py: choose of which script will be run
-> exp_name: the paremeter(training_125) means that i training the net with dataset that includes 125 motors scenes
-> change: give the information of a specific experiment(e.g. change of batch_size, epochs, optimizer)
-> root: the root file of training dataset
+* CUDA_VISIBLE_DEVICES: set the visible gpu
+
+* main_cls.py: choose of which script will be run
+
+* exp_name: the paremeter(training_125) means that i training the net with dataset that includes 125 motors scenes
+
+* change: give the information of a specific experiment(e.g. change of batch_size, epochs, optimizer)
+
+* root: the root file of training dataset
 
 ## 3D Segmentation
 
