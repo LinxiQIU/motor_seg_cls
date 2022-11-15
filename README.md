@@ -1,7 +1,7 @@
 # Motor Classification and Segmentation
 This project is a sub-project of the research project **AgiProbot** from KIT and Bosch. We develop a benchmark including 2D synthetic image datasets and 3D synthetic point cloud datasets. In this part, classification and segmentation are trained jointly, the results of separate training are also provided.
 
-<img src="https://github.com/LinxiQIU/motor_seg_cls/blob/main/images/cls_seg.png" width="700" height="370">
+<img src="https://github.com/LinxiQIU/motor_seg_cls/blob/main/images/cls_seg.png" width="800" height="400">
 
 ## Environment Requirements
 
@@ -19,6 +19,14 @@ The task of classification is to classify the key object in the scene into the p
 ```python
 CUDA_VISIBLE_DEVICES=6,7 python main_cls.py --exp_name classification --change adamw --root /home/ies/qiu/dataset/dataset1000
 ```
+
+Explanation of every important parameter:
+
+> CUDA_VISIBLE_DEVICES: set the visible gpu
+> main_cls.py: choose of which script will be run
+> exp_name: the paremeter(training_125) means that i training the net with dataset that includes 125 motors scenes
+> change: give the information of a specific experiment(e.g. change of batch_size, epochs, optimizer)
+> root: the root file of training dataset
 
 ## 3D Segmentation
 
