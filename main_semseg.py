@@ -234,7 +234,7 @@ def train(args, io):
 
 def test(args, io):
     NUM_POINT = args.npoints
-    print("start loading training data ...")
+    print("start loading test data ...")
     TEST_DATASET = MotorDataset_patch(split='test', root=args.root, num_points=NUM_POINT, test_area=args.validation_symbol)
     test_loader = DataLoader(TEST_DATASET, num_workers=8, batch_size=args.test_batch_size, shuffle=True, drop_last=False)
     device = torch.device("cuda" if args.cuda else "cpu")
@@ -263,6 +263,7 @@ def test(args, io):
         num_batches = len(test_loader)
         total_correct = 0
         total_seen = 0
+        labelweights = np.zeros(NUM_CLASS)
         total_seen_class = [0 for _ in range(NUM_CLASS)]
         total_correct_class = [0 for _ in range(NUM_CLASS)]
         total_iou_deno_class = [0 for _ in range(NUM_CLASS)]
