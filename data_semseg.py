@@ -105,7 +105,7 @@ class MotorDataset(Dataset):
 
 class MotorDataset_patch(Dataset):
     def __init__(self, root, split='train', num_points=2048, test_area='Validation',
-                  block_size=1.0, sample_rate=1.0, transform=None)
+                  block_size=1.0, sample_rate=1.0, transform=None):
     super().__init__()
     self.root = root
     self.num_points = num_points
