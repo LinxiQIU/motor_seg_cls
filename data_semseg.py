@@ -101,3 +101,82 @@ class MotorDataset(Dataset):
         chosed_labels = labels[choose]        
         chosed_points = pc_normalize(chosed_points)
         return chosed_points, chosed_labels
+
+
+class MotorDataset_patch(Dataset):
+    def __init__(self, root, split='train', num_points=2048, test_area='Validation',
+                  block_size=1.0, sample_rate=1.0, transform=None)
+    super().__init__()
+    self.root = root
+    self.num_points = num_points
+    self.block_size = block_size
+    self.transform = transform
+    motor_ls = sorted(os.listdir(root))
+    if split == 'train':
+        motor_ids = [motor for motor in motor_ls if '{}'.format(test_area) not in motor]
+    else:
+        motor_ids = [motor for motor in motor_ls if '{}'.format(test_area) in motor]
+
+    ##############  load npy file  ###############
+
+    self.motors_points = []
+    self.motors_labels = []
+    self.interation_times_eachmotor = []
+    label_num_eachtype = np.zeros(7)        ### initial an array to count how many points in each type
+    for i in tqdm(motor_ids, total=len(motor_ids)):
+        motor_data = np.load(os.path.join(root, i))
+        point_set = motor_data[:, 0:3]
+        point_set = pc_normalize(point_set)
+        motor_labels = motor_data[:, 6]
+        motor_points_labels = []
+
+        current_motor_size = point_set.shape[0]
+        if current_motor_size % self.num_points != 0:
+            num_add_points = self.num_points - (current_motor_size % self.num_points)
+            choice = np.random.choice(current_motor_size, num_add_points, replace=True) ### pick out some points from current points to patch up the current points
+            add_points = point_set[choice, :]
+            point_set = np.vstack((point_set, add_points))
+            add_labels = motor_labels[choice]
+            motor_labels = np.hstack((motor_labels, add_labels))
+
+        motor_points_labels = np.hstack((point_set, motor_labels.reshape((motor_labels.size, 1))))  ### merge labels and points to shuffle it
+        np.random.shuffle(motor_points_labels)
+        motor_points = motor_points_labels[:, 0:3]
+        motor_labels = motor_points_labels[:, 3]
+        self.interation_times_eachmotor.append(motor_labels.size / self.num_points)
+        num_eachtype_in_onemotor, _ = np.histogram(motor_labels, bins=7, range=(0,7))
+        label_num_eachtype += num_eachtype_in_onemotor
+        self.motors_points.append(motor_points)
+        self.motors_labels.append(motor_labels)
+
+    ###################  caculate the index for choose of points from the motor according to the number of points of a specific motor  #####################################
+
+    self.motors_index = []
+    for index in range(len(self.interation_times_eachmotor)):
+        motor_index_onemotor = [index] * int(self.interation_times_eachmotor[index])
+        self.motors_index.extend(motor_index_onemotor)
+
+    ###################  set the dictionary for dataloader index according to motor points structure  ###########
+
+    self.dic_block_accumulated_per_motors = {}
+    key = 0
+    for index in range(len(self.interation_times_eachmotor)):
+        if index != 0:
+            key += self.interation_times_eachmotor[index - 1]
+        for num_clouds_per_motor in range(int(self.interation_times_eachmotor[index])):
+            self.dic_block_accumulated_per_motors[int(key + num_clouds_per_motor)] = num_clouds_per_motor
+
+    #############################################################################################################
+
+def __len__(self):
+    return len(self.motors_index)
+
+def __getitem__(self, index):
+    points = self.motors_points[self.motors_index[index]]    
+    labels = self.motors_labels[self.motors_index[index]]
+    sequence = np.arange(self.num_points)
+    chosed_points = points[self.num_points * self.dic_block_accumulated_per_motors[index] + sequence, :]    ### ensure all points can be picked
+    chosed_labels = labels[self.num_points * self.dic_block_accumulated_per_motors[index] + sequence]
+    return chosed_points, chosed_labels
+
+

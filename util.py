@@ -1,8 +1,6 @@
 """
-@Author: bixuelei
-@Contact: bxueleibi@gmial.com
-@File: train_semseg.py
-@Time: 2022/1/10 7:49 PM
+@Author: linxi
+@Time: 2022/3/10 10:49 PM
 """
 
 

@@ -15,7 +15,7 @@ from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 from model_cls_seg import DGCNN_cls_semseg
 from model import PointNet2_semseg
 from torch.utils.data import DataLoader
-from data_semseg import MotorDataset
+from data_semseg import MotorDataset, MotorDataset_patch
 from util import *
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
@@ -232,6 +232,80 @@ def train(args, io):
     io.close()
 
 
+def test(args, io):
+    NUM_POINT = args.npoints
+    print("start loading training data ...")
+    TEST_DATASET = MotorDataset_patch(split='test', root=args.root, num_points=NUM_POINT, test_area=args.validation_symbol)
+    test_loader = DataLoader(TEST_DATASET, num_workers=8, batch_size=args.test_batch_size, shuffle=True, drop_last=False)
+    device = torch.device("cuda" if args.cuda else "cpu")
+
+    if args.model == 'dgcnn':
+        model = DGCNN_cls_semseg(args).to(device)
+    else:
+        raise Exception("Not implemented !")
+
+    model = nn.DataParallel(model)
+    print("Let's test and use ", torch.cuda.device_count(), " GPUs!")
+
+    try:
+        if args.eval:
+            checkpoint = torch.load(str(args.model_path))
+        model.load_state_dict(checkpoint['model_state_dict'])
+    except:
+        print("No pretrained model exists!")
+        exit(-1)
+
+    criterion = cal_loss
+    NUM_CLASS = 7
+
+    ##################### Test ####################
+    with torch.no_grad():
+        num_batches = len(test_loader)
+        total_correct = 0
+        total_seen = 0
+        total_seen_class = [0 for _ in range(NUM_CLASS)]
+        total_correct_class = [0 for _ in range(NUM_CLASS)]
+        total_iou_deno_class = [0 for _ in range(NUM_CLASS)]
+        model = model.eval()
+
+        for i, (points, seg) in tqdm(enumerate(test_loader), total = len(test_loader), smoothing=0.9):
+            points, seg = points.to(device), seg.to(device)
+            points = points.permute(0, 2, 1)
+            batch_size = points.size()[0]
+            seg_pred, cls_pred = model(points.float())
+            seg_pred = seg_pred.permute(0, 2, 1).contiguous()
+            batch_label = seg.view(-1, 1)[:, 0].cpu().data.numpy()   # array(batch_size*num_points)
+            seg_pred = seg_pred.contiguous().view(-1, NUM_CLASS)   # (batch_size*num_points, num_class)
+            pred_choice = seg_pred.cpu().data.max(1)[1].numpy()
+            correct = np.sum(pred_choice == batch_label)
+            total_correct += correct
+            total_seen += (batch_size * NUM_POINT)
+            tmp, _ = np.histogram(batch_label, range(NUM_CLASS + 1))
+            labelweights += tmp
+            for l in range(NUM_CLASS):
+                total_seen_class[l] += np.sum((batch_label == l))
+                total_correct_class[l] += np.sum((pred_choice == l) & (batch_label == l))
+                total_iou_deno_class[l] += np.sum((pred_choice == l) | (batch_label == l))
+        
+        labelweights = labelweights.astype(np.float32) / np.sum(labelweights.astype(np.float32))
+        mIoU = np.mean(np.array(total_correct_class) / (np.array(total_iou_deno_class, dtype=np.float64) + 1e-6))
+        cb_IoU_wB = total_correct_class[6]/float(total_iou_deno_class[6])
+        screw_IoU_wB = (total_correct_class[6]+total_correct_class[5]) / (float(total_iou_deno_class[6])+float(total_iou_deno_class[5]))
+        
+        outstr = 'Test with backgound: ---mIoU: %.6f, ---screw_IoU: %.6f, ---cover_screw_IoU: %.6f' % (
+            mIoU, screw_IoU_wB, cb_IoU_wB)
+        io.cprint(outstr)
+
+        iou_per_class_str = '------- IoU --------\n'
+        for l in range(NUM_CLASS):
+            iou_per_class_str += 'class %s weight: %.3f, IoU: %.3f \n' % (
+                labels2categories[l] + ' ' * (14 - len(labels2categories[l])), labelweights[l],
+                total_correct_class[l] / float(total_iou_deno_class[l]))
+        io.cprint(iou_per_class_str)
+        io.cprint('\n\n')
+
+
+
 if __name__ == "__main__":
     # Training settings
     parser = argparse.ArgumentParser(description='Point Cloud Semantic Segmentation')
@@ -283,6 +357,8 @@ if __name__ == "__main__":
                         help='Which datablocks to use for test')
     parser.add_argument('--hidden_size', type=int, default=512, metavar='hidden_size',
                         help='number of hidden_size for self_attention ')
+    parser.add_argument('--model_path', type=str, default='NN',
+                        help='path of pretrained model')
     args = parser.parse_args()
     
     _init_()
@@ -303,4 +379,6 @@ if __name__ == "__main__":
     
     if not args.eval:
         train(args, io)
+    else:
+        test(args, io)
         
