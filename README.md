@@ -37,8 +37,18 @@ Explanation of the important parameters:
 
 3D point cloud segmentation is the process of classifying point clouds into different regions, so that the points in the same isolated region have similar properties. Common segmentation metrics are category-wise IoU and overall mIoU. In our case, the overall mIoU metric is used.
 
+### Train
+
 ```python
 CUDA_VISIBLE_DEVICES=6,7 python main_semseg.py --exp_name semseg --change adamw --root /home/ies/qiu/dataset/dataset1000
+```
+
+### Test
+
+After training the model, you can use the following command to get the test result.
+
+```python
+CUDA_VISIBLE_DEVICES=6,7 python main_semseg.py --root /home/ies/qiu/dataset/dataset1000 --eval True --model_path /home/ies/qiu/motor_seg_cls/outputs/dgcnn/semseg/adamw/models/best_m.pth
 ```
 
 ## 3D Classification and Segmentation
